@@ -3,12 +3,13 @@ __author__ = 'brayden'
 import tornado.web
 import tornado
 import os
+from Handlers.Index import IndexHandler
 
 
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r'/', ),  # define a handler later when we actually have one!
+            (r'/', IndexHandler),
         ]
         settings = dict(
             debug=False,

@@ -15,5 +15,7 @@ def main():
     tornado.options.options.parse_command_line()
     application = Application()
     http_server = tornado.httpserver.HTTPServer(application)
-    http_server.listen(port=8080, address=None)  # ipv4 and v6
+    http_server.listen(port=6060, address=None)  # ipv4 and v6
     tornado.ioloop.IOLoop.instance().start()
+
+main()
