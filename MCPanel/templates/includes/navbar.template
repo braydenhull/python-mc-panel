@@ -12,6 +12,9 @@
             </ul>
             <ul class="nav navbar-nav pull-right">
                 <li><a class="navbar-brand" href="#"><i class="icon-user"></i> {{ username }}</a></li>
+                {% if not username == "Not Logged In" %}
+                <li><a href="/logout">Logout</a></li>
+                {% end %}
             </ul>
         </div>
     </div>

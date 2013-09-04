@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link href="../static/css/style.css" rel="stylesheet" media="screen">
+    <link href="../static/css/font-awesome.min.css" rel="stylesheet" media="screen">
+    <meta charset="UTF-8">
+    <style>
+        .form-signin {
+          max-width: 330px;
+          padding: 15px;
+          margin: 0 auto;
+        }
+        .form-signin .form-signin-heading,
+        .form-signin .checkbox {
+          margin-bottom: 10px;
+        }
+        .form-signin .checkbox {
+          font-weight: normal;
+        }
+        .form-signin .form-control {
+          position: relative;
+          font-size: 16px;
+          height: auto;
+          padding: 10px;
+          -webkit-box-sizing: border-box;
+             -moz-box-sizing: border-box;
+                  box-sizing: border-box;
+        }
+        .form-signin .form-control:focus {
+          z-index: 2;
+        }
+        .form-signin input[type="text"] {
+          margin-bottom: -1px;
+          border-bottom-left-radius: 0;
+          border-bottom-right-radius: 0;
+        }
+        .form-signin input[type="password"] {
+          margin-bottom: 10px;
+          border-top-left-radius: 0;
+          border-top-right-radius: 0;
+        }
+    </style>
+</head>
+<body>
+{% include "includes/navbar.template" %}
+<div class="container">
+    <form class="form-signin"> <!-- Courtesy of http://getbootstrap.com/examples/signin/ -->
+        <div id="message"></div>
+        <h2 class="form-signin-heading">Please Login</h2>
+        <input id="usernameField" type="text" class="form-control" placeholder="Username" autofocus>
+        <input id="passwordField" type="password" class="form-control" placeholder="Password">
+        <label class="checkbox">
+            <input id="rememberMe" type="checkbox" value="remember-me"> Remember Me
+        </label>
+        <button id="loginButton" onclick="return false;" class="btn btn-lg btn-primary btn-block" type="submit">Login</button>
+    </form>
+</div>
+<script src="../static/js/jquery-2.0.3.min.js"></script>
+<script src="../static/js/bootstrap.min.js"></script>
+<script src="../static/js/jquery.cookie.js"></script>
+<script>
+    $(function(){
+        $("#loginButton").click(function(){
+            var expires;
+            if($("#rememberMe").prop("checked")){
+                expires = 30; // If remember me is checked make it last a month (30 days, 31 day months don't exist, right?!)
+            } else {
+                expires = 3; // 3 days otherwise
+            } // technically you could set it as long as you want and it'll work, there's no internal periodic removal of sessions which should've expired
+
+            $.post("ajax/performLogin", {'username': $("#usernameField").val(), 'password': $("#passwordField").val(), 'expires': expires})
+            .done(function(data){
+                if(!data['result']['success']){
+                    $("#message").addClass("alert alert-danger").text(data['result']['message']).hide().fadeIn()
+                } else {
+                    if($.cookie('session') == undefined){
+                        $.cookie("session", data['result']['cookie'], {expires: expires, path: '/'});
+                    }
+                    $("#message").addClass("alert alert-success").text("Successfully logged in...").hide().fadeIn();
+                    setTimeout(function(){
+                        window.location.href = "/"
+                    }, 750)
+                }
+            })
+        })
+    })
+</script>
+{% include "includes/footer.template" %}
+</body>
+</html>

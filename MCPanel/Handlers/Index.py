@@ -10,6 +10,7 @@ class IndexHandler(BaseHandler):
     @asynchronous
     @authenticated
     def get(self):
+        #self.application.acl([], self.current_user, 1)
         loader = template.Loader(self.application.settings['template_path'])
         self.finish(loader.load("index.template").generate(pageName="Index", title="Minecraft Panel - Home",
                                                            username=self.current_user))
