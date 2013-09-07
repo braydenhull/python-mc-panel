@@ -31,7 +31,7 @@ class Database():
             raise self.UnsupportedDatabaseType()
 
         class Users(Model):
-            #ID = PrimaryKeyField()  # can't be set if I want to do a foreign key relationship
+            ID = PrimaryKeyField()
             Username = CharField(null=False, unique=True, max_length=255)
             Password = CharField(null=False, max_length=76)  # Length of what sha1_crypt produces
             API_Key = CharField(null=True, default=None, unique=True, max_length=128)  # SHA256
@@ -74,10 +74,11 @@ class Database():
             class Meta:
                 database = self.database
 
-        class User_Roles(Model):  # Assign role to users.
+        class User_Roles(Model):  # Assign role to users per server
             ID = PrimaryKeyField()
-            User = ForeignKeyField(Users, null=False, related_name='ID')
+            User_ID = IntegerField(null=False)
             Role_ID = IntegerField(null=False)
+            Server_ID = IntegerField(null=False)
 
             class Meta:
                 database = self.database
@@ -127,6 +128,18 @@ class Database():
 
     def assignUserToRole(self, user, role_id):
         if type(user) is str:  # assume user is name and not ID and look up ID as a result
-            user = self.Users.select(self.Users.id).where(self.Users.Username == user).get().id
+            user = self.Users.select(self.Users.ID).where(self.Users.Username == user).get().ID
 
         self.User_Roles.update(Role_ID=role_id, User_ID=user).execute()
+
+    def isUserAdmin(self, user):
+        return self.Users.select(self.Users.Is_Admin).where(self.Users.Username == user).get().Is_Admin
+
+    def getUsers(self):
+        return self.Users.select()
+
+    def deleteUser(self, user):
+        if type(user) is str:
+            (self.Users.get(self.Users.Username == user)).delete_instance()
+        else:
+            (self.Users.get(self.Users.ID == user)).delete_instance()

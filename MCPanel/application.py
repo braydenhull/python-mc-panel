@@ -10,6 +10,11 @@ from Handlers.Index import IndexHandler
 from Handlers.Login import LoginHandler
 from Handlers.Ajax.PerformLogin import PerformLoginHandler
 from Handlers.Logout import LogoutHandler
+from Handlers.Admin.Index import AdminIndex
+from Handlers.Admin.Users import AdminUsers
+from Handlers.Admin.Ajax.GetUsers import GetUserHandler
+from Handlers.Admin.Ajax.AddUser import AddUserHandler
+from Handlers.Admin.Ajax.DeleteUser import DeleteUserHandler
 
 
 class Application(tornado.web.Application):
@@ -22,6 +27,11 @@ class Application(tornado.web.Application):
             (r'/login', LoginHandler),
             (r'/ajax/performLogin', PerformLoginHandler),
             (r'/logout', LogoutHandler),
+            (r'/admin/', AdminIndex),
+            (r'/admin/users', AdminUsers),
+            (r'/admin/ajax/getUsers', GetUserHandler),
+            (r'/admin/ajax/addUser', AddUserHandler),
+            (r'/admin/ajax/deleteUser', DeleteUserHandler),
         ]
         settings = dict(
             debug=False,
