@@ -7,6 +7,7 @@
     <link href="../../static/css/font-awesome.min.css" rel="stylesheet" media="screen">
     <link href="../../static/css/jquery.dataTables.css" rel="stylesheet" media="screen">
     <link href="../../static/css/select2.css" rel="stylesheet" media="screen">
+    <link href="../../static/css/jquery.pnotify.default.css" rel="stylesheet" media="screen">
     <meta charset="UTF-8">
 </head>
 <body>
@@ -32,9 +33,21 @@
             </tbody>
         </table><br>
         <form class="form-inline" role="form">
-            <button id="addUserShow" type="button" class="btn btn-success">Add user</button>
+            <div class="btn-group" style="padding-top: 15px;">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                    User <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li><a href="#" id="addUserShow" onclick="return false;">Add User</a></li>
+                    <li><a href="#" id="editUserShow" onclick="return false;">Edit User</a></li>
+                    <li><a href="#" id="deleteUserShow" onclick="return false;">Delete User</a></li>
+                </ul>
+            </div>
 
-            <div id="addUserForm" style="display: inline;">
+            <div id="addUserForm" style="padding-top: 25px;">
+                <div class="form-group">
+                    <label for="addUserUserName"><strong>Add User</strong></label>
+                </div>
                 <div class="form-group">
                     <input type="text" class="form-control" id="addUserUserName" placeholder="Username" required>
                 </div>
@@ -49,16 +62,37 @@
                 <button id="addUserSubmit" type="button" class="btn btn-success">Submit</button>
             </div>
 
-            <button id="deleteUserShow" type="button" class="btn btn-danger">Delete User</button>
-            <div id="deleteUserForm" style="display: inline;">
-                <div class="form-group">
-                    <div class="select2-drop-mask" style="width: 200px;" id="deleteUserSelect"></div>
-                    <button id="deleteUserSubmit" type="button" class="btn btn-danger">Submit</button>
+            <div id="editUserForm" style="padding-top: 25px;">
+                <label for="editUserSelect"><strong>Edit User</strong></label>
+                <div class="select2-drop-mask" style="width: 200px;" id="editUserSelect"></div>
+                <div id="editUserInnerForm" style="display: inline;">
+                    <div class="form-group" style="width: 50px;">
+                        <input type="text" class="form-control" disabled id="editUserInnerFormUserID" placeholder="User ID" title="User ID cannot be modified">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="editUserInnerFormUserName" placeholder="Username">
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" id="editUserInnerFormUserIsAdmin"> Admin
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" class="btn btn-warning" id="editUserInnerFormSubmit">Submit</button>
+                    </div>
                 </div>
             </div>
 
+            <div id="deleteUserForm" style="padding-top: 25px;">
+                <div class="form-group">
+                    <label for="deleteUserSelect"><strong>Delete User</strong></label>
+                    <div class="select2-drop-mask" style="width: 200px;" id="deleteUserSelect"></div>
+                </div>
+            </div>
         </form>
-        <br><div id="userAlert"></div>
     </div>
 </div>
 <script src="../../static/js/jquery-2.0.3.min.js"></script>
@@ -67,10 +101,13 @@
 <script src="../../static/js/jquery.dataTable.fnReloadAjax.js"></script>
 <script src="../../static/js/bootbox.min.js"></script>
 <script src="../../static/js/select2.min.js"></script>
+<script src="../../static/js/jquery.pnotify.js"></script>
 <script>
     $(function(){
         $("#addUserForm").hide();
         $("#deleteUserForm").hide();
+        $("#editUserForm").hide();
+        $("#editUserInnerForm").hide();
         $("#deleteUserSelect").select2({
             placeholder: "Select a username",
             ajax: {
@@ -82,30 +119,106 @@
                 }
             }
         });
-        $("#deleteUserSubmit").click(function(){
-            var user = $("#deleteUserSelect").val();
-            console.log(user);
+        $("#editUserSelect").select2({
+            placeholder: "Select a username",
+            ajax: {
+                url: "ajax/getUsers",
+                dataType: "json",
+                type: "post",
+                results: function (data, page) {
+                    return { results: data.results }
+                }
+            }
+        });
+        $("#editUserSelect").on("change", function(e){
+            var user = e.added.id;
+            var name = e.added.text;
+            var is_admin = e.added.is_admin;
+            $("#editUserInnerFormUserID").val(user);
+            $("#editUserInnerFormUserName").val(name);
+            $("#editUserInnerFormUserIsAdmin").prop("checked", is_admin);
+            $("#editUserInnerForm").fadeIn();
+
+        });
+        $("#deleteUserSelect").on("change", function(e){
+            var user = e.added.id;
+            var name = e.added.text;
             if(user != ""){
-                bootbox.confirm("<p class=\"text-danger\">Do you wish to delete user, " + user + "?</p>", function(result){
+                bootbox.confirm("<p class=\"text-danger\">Do you wish to delete the user " + name + "?</p>", function(result){
                     if(result){
                         $.post("ajax/deleteUser", {'user': user})
                         .done(function(data){
                             if(data['result']['success']){
                                 usersTable.fnReloadAjax();
                                 $("#deleteUserSelect").select2('data', null);
+                                $.pnotify({
+                                    title: 'Removed user',
+                                    text: data['result']['message'],
+                                    type: 'success',
+                                    history: false
+                                })
                             } else {
-                                $("#userAlert").addClass("alert alert-danger").text(data['result']['message']).hide().fadeIn()
+                                $.pnotify({
+                                    title: 'Failed to remove user',
+                                    text: data['result']['message'],
+                                    type: 'error',
+                                    history: false
+                                })
                             }
+                        })
+                    } else {
+                        $.pnotify({
+                            title: "Remove user dismissed",
+                            text: "Remove user prompt was dismissed, user was not removed.",
+                            type: "info",
+                            history: false
                         })
                     }
                 })
             }
         });
         $("#addUserShow").click(function(){
+            $("#deleteUserForm").hide();
+            $("#editUserForm").hide();
+            $("#editUserInnerForm").hide();
             $("#addUserForm").fadeToggle();
         });
         $("#deleteUserShow").click(function(){
+            $("#addUserForm").hide();
+            $("#editUserForm").hide();
+            $("#editUserInnerForm").hide();
             $("#deleteUserForm").fadeToggle();
+        });
+        $("#editUserShow").click(function(){
+            $("#addUserForm").hide();
+            $("#deleteUserForm").hide();
+            $("#editUserInnerForm").hide();
+            $("#editUserForm").fadeToggle();
+        });
+        $("#editUserInnerFormSubmit").click(function(){
+            var user_id = $("#editUserInnerFormUserID").val();
+            var name = $("#editUserInnerFormUserName").val();
+            var is_admin = $("#editUserInnerFormUserIsAdmin").prop("checked");
+            $.post('ajax/editUser', {'user_id': user_id, 'username': name, 'is_admin': is_admin})
+            .done(function(data){
+                if(data['result']['success']){
+                    usersTable.fnReloadAjax();
+                    $("#editUserInnerForm").fadeOut();
+                    $.pnotify({
+                        title: 'Edited User',
+                        text: data['result']['message'],
+                        type: 'success',
+                        history: false
+                    })
+                } else {
+                    $.pnotify({
+                        title: 'Failed to edit user',
+                        text: data['result']['message'],
+                        type: 'error',
+                        history: false
+                    })
+                }
+            })
         });
         $("#addUserSubmit").click(function(){
             $.post("ajax/addUser", {'username': $("#addUserUserName").val(), 'password': $("#addUserPassword").val(), 'is_admin': $("#addUserAdminCheckbox").prop("checked")})
@@ -116,8 +229,19 @@
                     $("#addUserUserName").val("");
                     $("#addUserPassword").val("");
                     $("#addUserAdminCheckbox").prop("checked", false);
+                    $.pnotify({
+                        title: 'Added user',
+                        text: data['result']['message'],
+                        type: 'success',
+                        history: false
+                    })
                 } else {
-                    $("#userAlert").addClass("alert alert-danger").text(data['result']['message']).hide().fadeIn()
+                    $.pnotify({
+                        title: 'Failed to add user',
+                        text: data['result']['message'],
+                        type: 'error',
+                        history: false
+                    })
                 }
             })
         });

@@ -14,5 +14,5 @@ class GetUserHandler(BaseAdminAjaxHandler):
         result = {"aaData": [], "results": [], "more": False}
         for user in self.application.db.getUsers():
             result['aaData'].append([user.ID, user.Username, user.Is_Admin])  # DataTable
-            result['results'].append({'id': user.Username, 'text': user.Username})  # Select2
+            result['results'].append({'id': user.ID, 'text': user.Username, 'is_admin': user.Is_Admin})  # Select2
         self.finish(result)

@@ -3,6 +3,7 @@ __author__ = 'brayden'
 from peewee import *
 import passlib.hash
 from MCPanel.Config import config
+from tornado.web import escape
 
 
 class Database():
@@ -105,7 +106,7 @@ class Database():
 
     def addUser(self, username, password, is_admin=False):
         password = passlib.hash.sha1_crypt.encrypt(password, rounds=20000)
-        self.Users.create(Username=username, Password=password, Is_Admin=is_admin, force_insert=True)
+        self.Users.create(Username=escape.xhtml_escape(username), Password=password, Is_Admin=is_admin, force_insert=True)
 
     def insertSession(self, username, session):
         self.Users.update(Session=session).where(self.Users.Username == username).execute()
@@ -139,7 +140,27 @@ class Database():
         return self.Users.select()
 
     def deleteUser(self, user):
+        try:
+            user = int(user)
+        except ValueError:
+            pass
         if type(user) is str:
             (self.Users.get(self.Users.Username == user)).delete_instance()
         else:
             (self.Users.get(self.Users.ID == user)).delete_instance()
+
+    def editUser(self, user_id, username=None, password=None, api_key=None, session=None, is_admin=None):
+        user = self.Users()
+        user.ID = user_id
+        if type(username) is unicode:  # would've thought it'd be str, BUT NOO.. god damn unicode!
+            user.Username = username
+        if type(password) is unicode:
+            user.Password = passlib.hash.sha1_crypt.encrypt(password, rounds=20000)
+        if type(api_key) is unicode:
+            user.API_Key = api_key
+        if type(session) is unicode:
+            user.Session = session
+        if type(is_admin) is bool:
+            user.Is_Admin = is_admin
+
+        user.save()

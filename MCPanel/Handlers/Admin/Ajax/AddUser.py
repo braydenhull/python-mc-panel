@@ -21,6 +21,11 @@ class AddUserHandler(BaseAdminAjaxHandler):
                                             is_admin=is_admin)
                 self.finish({'result': {'success': True, 'message': 'User was successfully created.'}})
             except Exception as e:
-                self.finish({'result': {'success': False, 'message': str(e)}})
+                if e[0] == 1062:
+                # special MySQL code for integrity error which occurs on duplicate entries.
+                # who knows what happens when using sqlite/postgresql
+                    self.finish({'result': {'success': False, 'message': 'Integrity error!\r\nUser already exists.'}})
+                else:
+                    self.finish({'result': {'success': False, 'message': str(e)}})
         else:
             self.finish({'result': {'success': False, 'message': 'Required arguments not specified.'}})

@@ -15,6 +15,7 @@ from Handlers.Admin.Users import AdminUsers
 from Handlers.Admin.Ajax.GetUsers import GetUserHandler
 from Handlers.Admin.Ajax.AddUser import AddUserHandler
 from Handlers.Admin.Ajax.DeleteUser import DeleteUserHandler
+from Handlers.Admin.Ajax.EditUser import EditUserHandler
 
 
 class Application(tornado.web.Application):
@@ -32,6 +33,7 @@ class Application(tornado.web.Application):
             (r'/admin/ajax/getUsers', GetUserHandler),
             (r'/admin/ajax/addUser', AddUserHandler),
             (r'/admin/ajax/deleteUser', DeleteUserHandler),
+            (r'/admin/ajax/editUser', EditUserHandler),
         ]
         settings = dict(
             debug=False,
@@ -68,3 +70,7 @@ class Application(tornado.web.Application):
                 return True
             else:
                 return False
+
+    def dbPing(self):
+        print "DB Pinged"
+        self.db.ping()
