@@ -12,6 +12,7 @@ from Handlers.Ajax.PerformLogin import PerformLoginHandler
 from Handlers.Logout import LogoutHandler
 from Handlers.Admin.Index import AdminIndex
 from Handlers.Admin.Users import AdminUsers
+from Handlers.Admin.Roles import AdminRoles
 from Handlers.Admin.Ajax.GetUsers import GetUserHandler
 from Handlers.Admin.Ajax.AddUser import AddUserHandler
 from Handlers.Admin.Ajax.DeleteUser import DeleteUserHandler
@@ -30,6 +31,7 @@ class Application(tornado.web.Application):
             (r'/logout', LogoutHandler),
             (r'/admin/', AdminIndex),
             (r'/admin/users', AdminUsers),
+            (r'/admin/roles', AdminRoles),
             (r'/admin/ajax/getUsers', GetUserHandler),
             (r'/admin/ajax/addUser', AddUserHandler),
             (r'/admin/ajax/deleteUser', DeleteUserHandler),
@@ -72,5 +74,4 @@ class Application(tornado.web.Application):
                 return False
 
     def dbPing(self):
-        print "DB Pinged"
         self.db.ping()

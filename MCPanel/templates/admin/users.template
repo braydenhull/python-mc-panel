@@ -5,228 +5,217 @@
     <link href="../../static/css/bootstrap.min.css" rel="stylesheet" media="screen">
     <link href="../../static/css/style.css" rel="stylesheet" media="screen">
     <link href="../../static/css/font-awesome.min.css" rel="stylesheet" media="screen">
-    <link href="../../static/css/jquery.dataTables.css" rel="stylesheet" media="screen">
-    <link href="../../static/css/select2.css" rel="stylesheet" media="screen">
     <link href="../../static/css/jquery.pnotify.default.css" rel="stylesheet" media="screen">
     <meta charset="UTF-8">
 </head>
 <body>
 {% include "../includes/navbar.template" %}
-<div class="container">
+<div class="container" style="padding-top: 10px;">
     <div class="col-md-12">
-        <br>
         <button type="button" id="refreshTable" class="btn btn-primary pull-right"><i id="refreshTableIcon" class="icon-refresh"></i></button>
         <ul class="nav nav-pills">
             <li><a href="/admin/">Admin Home</a></li>
             <li class="active"><a href="users">User Management</a></li>
+            <li><a href="roles">Role Management</a></li>
         </ul>
         <br>
         <table id="userTable" class="table table-bordered">
             <thead>
             <tr>
-                <th>ID</th>
+                <th style="width: 50px;">ID</th>
                 <th>Username</th>
-                <th>Admin</th>
+                <th style="width: 20px;">Admin</th>
+                <th style="width: 90px;">Actions</th>
             </tr>
             </thead>
-            <tbody>
+            <tbody id="usersTable">
+            {% for user in users %}
+            <tr>
+                <td>{{ user.ID }}</td>
+                <td>{{ user.Username }}</td>
+                <td><input type="checkbox" {% if user.Is_Admin %}checked{% end %} disabled></td>
+                <td><button user-id="{{ user.ID }}" id="editUser" type="button" class="btn btn-warning btn-sm edit-button"><i class="icon-edit"></i></button>
+                    <button user-id="{{ user.ID }}" id="deleteUser" type="button" class="btn btn-danger btn-sm delete-button"><i class="icon-remove"></i></button></td>
+            </tr>
+            {% end %}
             </tbody>
         </table><br>
-        <form class="form-inline" role="form">
-            <div class="btn-group" style="padding-top: 15px;">
-                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                    User <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu" role="menu">
-                    <li><a href="#" id="addUserShow" onclick="return false;">Add User</a></li>
-                    <li><a href="#" id="editUserShow" onclick="return false;">Edit User</a></li>
-                    <li><a href="#" id="deleteUserShow" onclick="return false;">Delete User</a></li>
-                </ul>
+        <form class="form-inline" role="form" id="addUserForm">
+            <div class="form-group">
+                <label>
+                    Username <input maxlength="255" type="text" class="form-control" id="addUserUsername" placeholder="Username">
+                </label>
             </div>
 
-            <div id="addUserForm" style="padding-top: 25px;">
-                <div class="form-group">
-                    <label for="addUserUserName"><strong>Add User</strong></label>
-                </div>
-                <div class="form-group">
-                    <input type="text" class="form-control" id="addUserUserName" placeholder="Username" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" class="form-control" id="addUserPassword" placeholder="Password" required>
-                </div>
-                <div class="checkbox">
+            <div class="form-group">
+                <label>
+                    Password <input type="password" class="form-control" id="addUserPassword" placeholder="Password">
+                </label>
+                <div style="display: inline; padding-left: 10px;">
                     <label>
                         <input type="checkbox" id="addUserAdminCheckbox"> Admin
                     </label>
                 </div>
-                <button id="addUserSubmit" type="button" class="btn btn-success">Submit</button>
-            </div>
+            </div><br>
+            <button type="submit" onclick="return false;" class="btn btn-success" id="addUserSubmit">Create User</button>
+        </form>
 
-            <div id="editUserForm" style="padding-top: 25px;">
-                <label for="editUserSelect"><strong>Edit User</strong></label>
-                <div class="select2-drop-mask" style="width: 200px;" id="editUserSelect"></div>
-                <div id="editUserInnerForm" style="display: inline;">
-                    <div class="form-group" style="width: 50px;">
-                        <input type="text" class="form-control" disabled id="editUserInnerFormUserID" placeholder="User ID" title="User ID cannot be modified">
+        <div class="modal fade" id="editModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title" id="editUserTitle">Edit User</h4>
                     </div>
-                    <div class="form-group">
-                        <input type="text" class="form-control" id="editUserInnerFormUserName" placeholder="Username">
-                    </div>
-                    <div class="form-group">
-                        <div class="checkbox">
+                    <div class="modal-body">
+                        <div class="form-group">
                             <label>
-                                <input type="checkbox" id="editUserInnerFormUserIsAdmin"> Admin
+                                Username <input type="text" class="form-control" maxlength="255" id="editUserUsername" placeholder="Username">
                             </label>
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <button type="button" class="btn btn-warning" id="editUserInnerFormSubmit">Submit</button>
+                        <div class="checkbox">
+                            <label>
+                                Admin <input type="checkbox" id="editUserIs_Admin">
+                            </label>
+                        </div>
+                        <input type="hidden" id="editUserId">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-warning" id="editUserSubmit">Submit Changes</button>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div id="deleteUserForm" style="padding-top: 25px;">
-                <div class="form-group">
-                    <label for="deleteUserSelect"><strong>Delete User</strong></label>
-                    <div class="select2-drop-mask" style="width: 200px;" id="deleteUserSelect"></div>
+        <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title" id="deleteUserTitle">Delete User</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p id="deleteUserText" class="text-danger">Are you sure you wish to delete ?</p>
+                        <input type="hidden" id="deleteUserId"> <!-- Hold user ID in an easy to access context -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button id="deleteUserSubmit" type="button" class="btn btn-danger" data-dismiss="modal">Delete</button>
+                    </div>
                 </div>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 <script src="../../static/js/jquery-2.0.3.min.js"></script>
-<script src="../../static/js/jquery.dataTables.min.js"></script>
 <script src="../../static/js/bootstrap.min.js"></script>
-<script src="../../static/js/jquery.dataTable.fnReloadAjax.js"></script>
-<script src="../../static/js/bootbox.min.js"></script>
-<script src="../../static/js/select2.min.js"></script>
 <script src="../../static/js/jquery.pnotify.js"></script>
 <script>
     $(function(){
-        $("#addUserForm").hide();
-        $("#deleteUserForm").hide();
-        $("#editUserForm").hide();
-        $("#editUserInnerForm").hide();
-        $("#deleteUserSelect").select2({
-            placeholder: "Select a username",
-            ajax: {
-                url: "ajax/getUsers",
-                dataType: "json",
-                type: "post",
-                results: function (data, page) {
-                    return { results: data.results }
-                }
-            }
-        });
-        $("#editUserSelect").select2({
-            placeholder: "Select a username",
-            ajax: {
-                url: "ajax/getUsers",
-                dataType: "json",
-                type: "post",
-                results: function (data, page) {
-                    return { results: data.results }
-                }
-            }
-        });
-        $("#editUserSelect").on("change", function(e){
-            var user = e.added.id;
-            var name = e.added.text;
-            var is_admin = e.added.is_admin;
-            $("#editUserInnerFormUserID").val(user);
-            $("#editUserInnerFormUserName").val(name);
-            $("#editUserInnerFormUserIsAdmin").prop("checked", is_admin);
-            $("#editUserInnerForm").fadeIn();
+        var users = {
+        {% for user in users %}
+            {{ user.ID }}: {'Username': '{{ user.Username }}', 'Is_Admin': '{{ user.Is_Admin }}'},
+        {% end %}
+        };
 
+        function reloadTable(){
+            users = {};
+            $("#refreshTableIcon").addClass('icon-spin');
+            $.post("ajax/getUsers")
+            .done(function(data){
+                $("#usersTable").empty();
+                $(data['result']).each(function(index, name){
+                    $("#usersTable").append('<tr><td>' + data['result'][index]['id'] + '</td>' +
+                            '<td>' + data['result'][index]['username'] + '</td>' +
+                            '<td><input type="checkbox" disabled ' + ((data['result'][index]['is_admin']) ? 'checked' :  '') + ' </td>' +
+                            '<td><button user-id="' + data['result'][index]['id'] + '" id="editUser" type="button" class="btn btn-warning btn-sm edit-button"><i class="icon-edit"></i></button> ' +
+                            '<button user-id="' + data['result'][index]['id'] + '" id="deleteUser" type="button" class="btn btn-danger btn-sm delete-button"><i class="icon-remove"></i></button></td></tr>');
+                    users[data['result'][index]['id']] = {"Username": data['result'][index]['username'], "Is_Admin": data['result'][index]['is_admin']}
+                });
+                $("#refreshTableIcon").removeClass("icon-spin")
+            })
+
+        }
+        $("#refreshTable").click(function(){
+            reloadTable()
         });
-        $("#deleteUserSelect").on("change", function(e){
-            var user = e.added.id;
-            var name = e.added.text;
-            if(user != ""){
-                bootbox.confirm("<p class=\"text-danger\">Do you wish to delete the user " + name + "?</p>", function(result){
-                    if(result){
-                        $.post("ajax/deleteUser", {'user': user})
-                        .done(function(data){
-                            if(data['result']['success']){
-                                usersTable.fnReloadAjax();
-                                $("#deleteUserSelect").select2('data', null);
-                                $.pnotify({
-                                    title: 'Removed user',
-                                    text: data['result']['message'],
-                                    type: 'success',
-                                    history: false
-                                })
-                            } else {
-                                $.pnotify({
-                                    title: 'Failed to remove user',
-                                    text: data['result']['message'],
-                                    type: 'error',
-                                    history: false
-                                })
-                            }
-                        })
-                    } else {
-                        $.pnotify({
-                            title: "Remove user dismissed",
-                            text: "Remove user prompt was dismissed, user was not removed.",
-                            type: "info",
-                            history: false
-                        })
-                    }
-                })
+        var usersTable = $("#usersTable");
+        usersTable.on('click', '.edit-button', function(){
+            $("#editUserUsername").val(users[$(this).attr('user-id')]['Username']);
+            if(users[$(this).attr('user-id')]['Is_Admin'] == 'True'){
+                $("#editUserIs_Admin").prop("checked", true)
+            } else {
+                $("#editUserIs_Admin").prop("checked", false)
             }
+            $("#editUserTitle").text("Edit User: " + users[$(this).attr('user-id')]['Username']);
+            $("#editUserId").val($(this).attr('user-id'));
+            $("#editModal").modal('show')
         });
-        $("#addUserShow").click(function(){
-            $("#deleteUserForm").hide();
-            $("#editUserForm").hide();
-            $("#editUserInnerForm").hide();
-            $("#addUserForm").fadeToggle();
-        });
-        $("#deleteUserShow").click(function(){
-            $("#addUserForm").hide();
-            $("#editUserForm").hide();
-            $("#editUserInnerForm").hide();
-            $("#deleteUserForm").fadeToggle();
-        });
-        $("#editUserShow").click(function(){
-            $("#addUserForm").hide();
-            $("#deleteUserForm").hide();
-            $("#editUserInnerForm").hide();
-            $("#editUserForm").fadeToggle();
-        });
-        $("#editUserInnerFormSubmit").click(function(){
-            var user_id = $("#editUserInnerFormUserID").val();
-            var name = $("#editUserInnerFormUserName").val();
-            var is_admin = $("#editUserInnerFormUserIsAdmin").prop("checked");
-            $.post('ajax/editUser', {'user_id': user_id, 'username': name, 'is_admin': is_admin})
+
+        $("#editUserSubmit").click(function(){
+            $.post("ajax/editUser", {'user_id': $("#editUserId").val(), 'username': $("#editUserUsername").val(), 'is_admin': $("#editUserIs_Admin").prop("checked")})
             .done(function(data){
                 if(data['result']['success']){
-                    usersTable.fnReloadAjax();
-                    $("#editUserInnerForm").fadeOut();
                     $.pnotify({
-                        title: 'Edited User',
+                        title: 'Edited user',
                         text: data['result']['message'],
                         type: 'success',
                         history: false
-                    })
+                    });
+                    $("#editModal").modal('hide');
+                    reloadTable()
                 } else {
                     $.pnotify({
                         title: 'Failed to edit user',
                         text: data['result']['message'],
                         type: 'error',
                         history: false
-                    })
+                    });
+                    $("#editModal").modal('hide')
                 }
             })
         });
-        $("#addUserSubmit").click(function(){
-            $.post("ajax/addUser", {'username': $("#addUserUserName").val(), 'password': $("#addUserPassword").val(), 'is_admin': $("#addUserAdminCheckbox").prop("checked")})
+
+        usersTable.on('click', '.delete-button', function(){
+            console.log($(this).attr('user-id'));
+            console.log(users);
+            $("#deleteUserTitle").text("Delete User: " + users[$(this).attr('user-id')]['Username']);
+            $("#deleteUserText").text("Are you sure you wish to delete '" + users[$(this).attr('user-id')]['Username'] + "'?")
+            $("#deleteUserId").val($(this).attr('user-id'));
+            $("#deleteModal").modal('show');
+        });
+
+        $("#deleteUserSubmit").click(function(ev, ob){
+            $.post("ajax/deleteUser", {'user': $("#deleteUserId").val()})
             .done(function(data){
                 if(data['result']['success']){
-                    usersTable.fnReloadAjax();
-                    $("#addUserForm").fadeToggle();
-                    $("#addUserUserName").val("");
+                    $.pnotify({
+                        title: 'Deleted user',
+                        text: data['result']['message'],
+                        type: 'success',
+                        history: false
+                    });
+                    $("#deleteModal").modal('hide');
+                    reloadTable();
+                } else {
+                    $.pnotify({
+                        title: 'Failed to delete user',
+                        text: data['result']['message'],
+                        type: 'error',
+                        history: false
+                    });
+                    $("#deleteModal").modal('hide')
+                }
+            })
+        });
+
+        $("#addUserSubmit").click(function(){
+            $.post("ajax/addUser", {'username': $("#addUserUsername").val(), 'password': $("#addUserPassword").val(), 'is_admin': $("#addUserAdminCheckbox").prop("checked")})
+            .done(function(data){
+                if(data['result']['success']){
+                    $("#addUserUsername").val("");
                     $("#addUserPassword").val("");
                     $("#addUserAdminCheckbox").prop("checked", false);
                     $.pnotify({
@@ -234,7 +223,8 @@
                         text: data['result']['message'],
                         type: 'success',
                         history: false
-                    })
+                    });
+                    reloadTable();
                 } else {
                     $.pnotify({
                         title: 'Failed to add user',
@@ -244,17 +234,6 @@
                     })
                 }
             })
-        });
-        var usersTable = $("#userTable").dataTable({
-            "sAjaxSource": 'ajax/getUsers',
-            "sServerMethod": 'POST'
-        });
-        $("#refreshTable").click(function(){
-            var icon;
-            icon = $("#refreshTableIcon");
-            icon.addClass("icon-spin");
-            usersTable.fnReloadAjax();
-            icon.removeClass("icon-spin")
         });
     })
 </script>
