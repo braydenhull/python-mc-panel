@@ -11,6 +11,7 @@ class AdminIndex(BaseAdminHandler):
     @authenticated
     def get(self):
         self.if_admin()
-        loader = template.Loader(self.application.settings['template_path'])
-        self.finish(loader.load("admin/index.template").generate(pageName="Admin Index", title="Minecraft Panel - Admin",
-                                                           username=self.current_user))
+        # loader = template.Loader(self.application.settings['template_path'])
+        # self.finish(
+        #     loader.load("admin/index.template").generate(pageName="Admin Index", title="Minecraft Panel - Admin"))
+        self.render(self.application.settings['template_path'] + '/admin/index.template', pageName="Admin Index")

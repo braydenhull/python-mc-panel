@@ -24,6 +24,8 @@ class Application(tornado.web.Application):
         self.config = config()
         self.db = MCPanel.Database.database.Database()
         self.sessionCache = {}
+        self.title = self.config.get('panel', 'title')
+        self.name = self.config.get('panel', 'name')
         handlers = [
             (r'/', IndexHandler),
             (r'/login', LoginHandler),
@@ -38,7 +40,7 @@ class Application(tornado.web.Application):
             (r'/admin/ajax/editUser', EditUserHandler),
         ]
         settings = dict(
-            debug=False,
+            debug=True,
             gzip=True,
             login_url='/login',
             template_path=os.path.join(os.path.dirname(__file__), 'templates'),

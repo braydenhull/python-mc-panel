@@ -9,7 +9,7 @@
     <meta charset="UTF-8">
 </head>
 <body>
-{% include "../includes/navbar.template" %}
+{% include "includes/navbar.template" %}
 <div class="container" style="padding-top: 10px;">
     <div class="col-md-12">
         <button type="button" id="refreshTable" class="btn btn-primary pull-right"><i id="refreshTableIcon" class="icon-refresh"></i></button>
@@ -237,6 +237,6 @@
         });
     })
 </script>
-{% include "../includes/footer.template" %}
+{% include "includes/footer.template" %}
 </body>
 </html>

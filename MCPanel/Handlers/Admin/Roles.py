@@ -11,7 +11,7 @@ class AdminRoles(BaseAdminHandler):
     @authenticated
     def get(self):
         self.if_admin()
-        loader = template.Loader(self.application.settings['template_path'])
-        self.finish(loader.load("admin/roles.template").generate(pageName="Role Management",
-                                                                 title="Minecraft Panel - Role Management",
-                                                                 username=self.current_user))
+        # loader = template.Loader(self.application.settings['template_path'])
+        # self.finish(loader.load("admin/roles.template").generate(pageName="Role Management",
+        #                                                          title="Minecraft Panel - Role Management"))
+        self.render(self.application.settings['template_path'] + '/admin/roles.template', pageName="Role Management")

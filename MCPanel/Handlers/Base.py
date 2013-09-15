@@ -19,3 +19,13 @@ class BaseHandler(tornado.web.RequestHandler):
                 except DoesNotExist:
                     return None
         return None
+
+    def get_template_namespace(self):
+        ns = super(BaseHandler, self).get_template_namespace()
+        ns.update({
+            'title': self.application.title,
+            'name': self.application.name,
+            'padding': 10,
+        })
+
+        return ns

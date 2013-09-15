@@ -62,7 +62,7 @@ class Database():
                                    # Name is friendly name for the permission
             ID = PrimaryKeyField()
             PermissionName = CharField(null=False, max_length=128)
-            PermissionKey = CharField(null=False, max_length=128)
+            PermissionKey = CharField(null=False, unique=True, max_length=128)
 
             class Meta:
                 database = self.database
@@ -108,6 +108,9 @@ class Database():
         password = passlib.hash.sha1_crypt.encrypt(password, rounds=20000)
         self.Users.create(Username=escape.xhtml_escape(username), Password=password, Is_Admin=is_admin, force_insert=True)
 
+    def addServer(self, name, address, port):
+        self.Servers.create(ServerName=escape.xhtml_escape(name), Address=address, Port=port)
+
     def insertSession(self, username, session):
         self.Users.update(Session=session).where(self.Users.Username == username).execute()
 
@@ -128,10 +131,16 @@ class Database():
         self.Role_Permissions.create(Role_ID=role_id, Permission_ID=perm_id)
 
     def assignUserToRole(self, user, role_id):
-        if type(user) is str:  # assume user is name and not ID and look up ID as a result
+        if type(user) is str or unicode:  # assume user is name and not ID and look up ID as a result
             user = self.Users.select(self.Users.ID).where(self.Users.Username == user).get().ID
 
         self.User_Roles.update(Role_ID=role_id, User_ID=user).execute()
+
+    def getRoles(self):
+        return self.Roles.select()
+
+    def getRolePermissions(self, roleId):
+        return self.Role_Permissions().where(self.Role_Permissions.Role_ID == roleId).get()
 
     def isUserAdmin(self, user):
         return self.Users.select(self.Users.Is_Admin).where(self.Users.Username == user).get().Is_Admin

@@ -2,7 +2,6 @@ __author__ = 'brayden'
 
 from tornado.web import asynchronous
 from Base import BaseHandler
-from tornado import template
 from tornado.web import authenticated
 
 
@@ -11,6 +10,4 @@ class IndexHandler(BaseHandler):
     @authenticated
     def get(self):
         #self.application.acl([], self.current_user, 1)
-        loader = template.Loader(self.application.settings['template_path'])
-        self.finish(loader.load("index.template").generate(pageName="Index", title="Minecraft Panel - Home",
-                                                           username=self.current_user))
+        self.render(self.application.settings['template_path'] + '/index.template', pageName="Home")

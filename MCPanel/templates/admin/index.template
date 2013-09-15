@@ -8,7 +8,7 @@
     <meta charset="UTF-8">
 </head>
 <body>
-{% include "../includes/navbar.template" %}
+{% include "includes/navbar.template" %}
 <div class="container" style="padding-top: 10px;">
     <div class="col-md-12">
         <ul class="nav nav-pills">
@@ -20,6 +20,6 @@
 </div>
 <script src="../../static/js/jquery-2.0.3.min.js"></script>
 <script src="../../static/js/bootstrap.min.js"></script>
-{% include "../includes/footer.template" %}
+{% include "includes/footer.template" %}
 </body>
 </html>

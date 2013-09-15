@@ -16,7 +16,7 @@ def main():
     tornado.options.options.parse_command_line()
     application = Application()
     http_server = tornado.httpserver.HTTPServer(application)
-    http_server.listen(port=6060, address=None)  # ipv4 and v6
+    http_server.listen(port=80, address=None)  # ipv4 and v6
     tornado.ioloop.PeriodicCallback(application.dbPing, int(config().get('database', 'ping-interval')) * 1000).start()
     tornado.ioloop.IOLoop.instance().start()
 
