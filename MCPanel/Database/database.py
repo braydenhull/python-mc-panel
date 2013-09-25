@@ -44,9 +44,11 @@ class Database():
 
         class Servers(Model):
             ID = PrimaryKeyField()
-            ServerName = CharField(null=False, max_length=255)
-            Address = CharField(max_length=39)
-            Port = IntegerField()
+            Address = CharField(max_length=39, null=False)
+            Port = IntegerField(null=False)
+            Owner = IntegerField(null=False)
+            Memory = IntegerField(null=False) # int as MB, translated to <memory>MB in start command
+            ServerJar = CharField(max_length=128, null=False)
 
             class Meta:
                 database = self.database
@@ -108,8 +110,11 @@ class Database():
         password = passlib.hash.sha1_crypt.encrypt(password, rounds=20000)
         self.Users.create(Username=escape.xhtml_escape(username), Password=password, Is_Admin=is_admin, force_insert=True)
 
-    def addServer(self, name, address, port):
-        self.Servers.create(ServerName=escape.xhtml_escape(name), Address=address, Port=port)
+    def addServer(self, address, port, memory, owner):
+        self.Servers.create(Address=address, Port=port, Memory=memory, Owner=owner, ServerJar='minecraft.jar')
+
+    def getServers(self):
+        return self.Servers.select()
 
     def insertSession(self, username, session):
         self.Users.update(Session=session).where(self.Users.Username == username).execute()

@@ -5,7 +5,10 @@ import tornado
 import os
 import hashlib
 import MCPanel.Database.database
+import ConfigParser
+from tornado.web import URLSpec
 from Config import config
+from MCPanel.Minecraft.supervisor import Supervisor
 from Handlers.Index import IndexHandler
 from Handlers.Login import LoginHandler
 from Handlers.Ajax.PerformLogin import PerformLoginHandler
@@ -17,6 +20,7 @@ from Handlers.Admin.Ajax.GetUsers import GetUserHandler
 from Handlers.Admin.Ajax.AddUser import AddUserHandler
 from Handlers.Admin.Ajax.DeleteUser import DeleteUserHandler
 from Handlers.Admin.Ajax.EditUser import EditUserHandler
+from Handlers.Servers.Index import ServersIndexHandler
 
 
 class Application(tornado.web.Application):
@@ -26,19 +30,26 @@ class Application(tornado.web.Application):
         self.sessionCache = {}
         self.title = self.config.get('panel', 'title')
         self.name = self.config.get('panel', 'name')
+        self.usernames = {} # mapping of all usernames to IDs
+        self.generateUsernameCache()
+        self.supervisorAuth = {'Username': '', 'Password': ''}
+        self.parseSupervisorConfig()
+        self.supervisor = Supervisor(self.supervisorAuth['Username'], self.supervisorAuth['Password'])
         handlers = [
-            (r'/', IndexHandler),
-            (r'/login', LoginHandler),
-            (r'/ajax/performLogin', PerformLoginHandler),
-            (r'/logout', LogoutHandler),
-            (r'/admin/', AdminIndex),
-            (r'/admin/users', AdminUsers),
-            (r'/admin/roles', AdminRoles),
-            (r'/admin/ajax/getUsers', GetUserHandler),
-            (r'/admin/ajax/addUser', AddUserHandler),
-            (r'/admin/ajax/deleteUser', DeleteUserHandler),
-            (r'/admin/ajax/editUser', EditUserHandler),
+            ('Home', r'/', IndexHandler),
+            ('Login', r'/login', LoginHandler),
+            ('PerformLogin', r'/ajax/performLogin', PerformLoginHandler),
+            ('Logout', r'/logout', LogoutHandler),
+            ('Admin_Home', r'/admin/', AdminIndex),
+            ('Admin_Users', r'/admin/users', AdminUsers),
+            ('Admin_Roles', r'/admin/roles', AdminRoles),
+            ('Admin_Ajax_GetUsers', r'/admin/ajax/getUsers', GetUserHandler),
+            ('Admin_Ajax_AddUser', r'/admin/ajax/addUser', AddUserHandler),
+            ('Admin_Ajax_DeleteUser', r'/admin/ajax/deleteUser', DeleteUserHandler),
+            ('Admin_Ajax_EditUser', r'/admin/ajax/editUser', EditUserHandler),
+            ('Servers_Index', r'/servers/', ServersIndexHandler),
         ]
+        handlers = [URLSpec(pattern, handler, name=name) for name, pattern, handler in handlers]
         settings = dict(
             debug=True,
             gzip=True,
@@ -77,3 +88,15 @@ class Application(tornado.web.Application):
 
     def dbPing(self):
         self.db.ping()
+
+    def generateUsernameCache(self):
+        users = self.db.getUsers()
+        for user in users:
+            self.usernames[user.ID] = {'Username': user.Username, 'Is_Admin': user.Is_Admin}
+            self.usernames[user.Username] = {'ID': user.ID, 'Is_Admin': user.Is_Admin}
+
+    def parseSupervisorConfig(self):
+        config = ConfigParser.RawConfigParser()
+        config.read('/etc/supervisor/supervisord.conf')
+        self.supervisorAuth['Username'] = config.get('inet_http_server', 'username')
+        self.supervisorAuth['Password'] = config.get('inet_http_server', 'password')

@@ -25,7 +25,5 @@ class BaseHandler(tornado.web.RequestHandler):
         ns.update({
             'title': self.application.title,
             'name': self.application.name,
-            'padding': 10,
         })
-
         return ns

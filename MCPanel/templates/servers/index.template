@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ title }}</title>
+    <title>{{ title }} - Servers</title>
     <link href="../../static/css/bootstrap.min.css" rel="stylesheet" media="screen">
     <link href="../../static/css/style.css" rel="stylesheet" media="screen">
     <link href="../../static/css/font-awesome.min.css" rel="stylesheet" media="screen">
@@ -11,7 +11,35 @@
 {% include "includes/navbar.template" %}
 <div class="container">
     <div class="col-md-12">
-        <p>test</p>
+        <h3>Server list</h3>
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Address</th>
+                <th>Port</th>
+                <th>Owner</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for server in handler.application.db.getServers() %}
+                {% if handler.application.usernames[server.Owner]['Username'] == current_user or handler.application.usernames[current_user]['Is_Admin'] %}
+                <tr>
+                    <td>{{ server.ID }}</td>
+                    <td>{{ server.Address }}</td>
+                    <td>{{ server.Port }}</td>
+                    <td>{{ handler.application.usernames[server.Owner]['Username'] }}</td>
+                    <td>
+                        <a href="{{ server.ID }}/" class="btn btn-sm btn-primary"><i class="icon-edit"></i></a>
+                        <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-danger"><i class="icon-stop"></i></button>
+                        <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-success" id="startServer"><i class="icon-play"></i></button>
+                    </td>
+                </tr>
+                {% end %}
+            {% end %}
+            </tbody>
+        </table>
     </div>
 </div>
 <script src="../../static/js/jquery-2.0.3.min.js"></script>
