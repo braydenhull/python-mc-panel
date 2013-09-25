@@ -10,7 +10,6 @@ class AddUserHandler(BaseAdminAjaxHandler):
     @authenticated
     def post(self):
         self.if_admin()
-        self.set_header('Content-Type', 'text/json')
         if all(k in self.request.arguments for k in ("username", "password", "is_admin")):
             try:
                 if self.get_argument('is_admin') == 'true':

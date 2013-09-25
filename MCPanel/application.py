@@ -4,11 +4,11 @@ import tornado.web
 import tornado
 import os
 import hashlib
-import MCPanel.Database.database
+import Database.database
 import ConfigParser
 from tornado.web import URLSpec
 from Config import config
-from MCPanel.Minecraft.supervisor import Supervisor
+from Minecraft.supervisor import Supervisor
 from Handlers.Index import IndexHandler
 from Handlers.Login import LoginHandler
 from Handlers.Ajax.PerformLogin import PerformLoginHandler
@@ -26,7 +26,7 @@ from Handlers.Servers.Index import ServersIndexHandler
 class Application(tornado.web.Application):
     def __init__(self):
         self.config = config()
-        self.db = MCPanel.Database.database.Database()
+        self.db = Database.database.Database()
         self.sessionCache = {}
         self.title = self.config.get('panel', 'title')
         self.name = self.config.get('panel', 'name')
@@ -58,6 +58,7 @@ class Application(tornado.web.Application):
             static_path=os.path.join(os.path.dirname(__file__), 'static'),
         )
         tornado.web.Application.__init__(self, handlers, **settings)
+        print self.named_handlers
 
     def acl(self, required_access, current_user, server_id):
         user_perms = ['test', 'perm1']

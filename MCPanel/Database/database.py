@@ -2,7 +2,7 @@ __author__ = 'brayden'
 
 from peewee import *
 import passlib.hash
-from MCPanel.Config import config
+from Config import config
 from tornado.web import escape
 
 

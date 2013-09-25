@@ -10,7 +10,6 @@ class DeleteUserHandler(BaseAdminAjaxHandler):
     @authenticated
     def post(self):
         self.if_admin()
-        self.set_header('Content-Type', 'text/json')
         if 'user' in self.request.arguments:
             try:
                 self.application.db.deleteUser(str(self.get_argument('user')))

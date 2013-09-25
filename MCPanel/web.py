@@ -36,7 +36,7 @@ from Config import config
 # of the authors and should not be interpreted as representing official policies,
 # either expressed or implied, of the FreeBSD Project.
 
-os.chdir(os.path.dirname(__file__))  # fixes some quirk with chdir on supervisor, though not sure if needed
+#os.chdir(os.path.dirname(__file__))  # fixes some quirk with chdir on supervisor, though not sure if needed
 # last time I tried without, it worked fine
 
 

@@ -1,6 +1,6 @@
 __author__ = 'brayden'
 
-from MCPanel.Handlers.Base import BaseHandler
+from ..Base import BaseHandler
 from tornado.web import HTTPError
 from peewee import DoesNotExist
 

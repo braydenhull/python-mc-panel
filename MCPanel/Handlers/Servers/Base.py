@@ -1,6 +1,6 @@
 __author__ = 'brayden'
 
-from MCPanel.Handlers.Base import BaseHandler
+from ..Base import BaseHandler
 
 
 class BaseServersHandler(BaseHandler):
