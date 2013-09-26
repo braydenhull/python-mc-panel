@@ -9,13 +9,27 @@
         </div>
         <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
-                <li id="Home"><a href="/">Home</a></li>
-                <li id="Minecraft Servers"><a href="/servers/">Minecraft Servers</a></li>
+                <li id="{{ handler.application.named_handlers['Home'].handler_class.__name__ }}"><a href="{{ reverse_url('Home') }}">Home</a></li>
+                <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Servers <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                    <li id="{{ handler.application.named_handlers['Servers_Index'].handler_class.__name__ }}"><a href="{{ reverse_url("Servers_Index") }}">Servers</a></li>
+                    <li class="divider"></li>
+                    {% for server in handler.application.db.getServers() %}
+                        {% if current_user == "Not Logged In" %}
+                            {% break %}
+                        {% end %}
+                        {% if server.Owner == current_user or handler.application.usernames[current_user]['Is_Admin'] %}
+                        <li><a href="{{ reverse_url("Servers_Index") }}{{ server.ID }}">{{ server.Address }}:{{ server.Port }}</a></li>
+                        {% end %}
+                    {% end %}
+                </ul>
+                </li>
             </ul>
             <ul class="nav navbar-nav pull-right">
                 <li><a class="navbar-brand" href="#"><i class="icon-user"></i> {{ current_user }}</a></li>
                 {% if not current_user == "Not Logged In" %}
-                <li><a href="/logout">Logout</a></li>
+                <li><a href="{{ reverse_url('Logout') }}">Logout</a></li>
                 {% end %}
             </ul>
         </div>

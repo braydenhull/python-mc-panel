@@ -24,16 +24,21 @@
             </thead>
             <tbody>
             {% for server in handler.application.db.getServers() %}
-                {% if handler.application.usernames[server.Owner]['Username'] == current_user or handler.application.usernames[current_user]['Is_Admin'] %}
+                {% if server.Owner == current_user or handler.application.usernames[current_user]['Is_Admin'] %}
                 <tr>
                     <td>{{ server.ID }}</td>
                     <td>{{ server.Address }}</td>
                     <td>{{ server.Port }}</td>
-                    <td>{{ handler.application.usernames[server.Owner]['Username'] }}</td>
+                    <td>{{ server.Owner }}</td>
                     <td>
-                        <a href="{{ server.ID }}/" class="btn btn-sm btn-primary"><i class="icon-edit"></i></a>
-                        <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-danger"><i class="icon-stop"></i></button>
-                        <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-success" id="startServer"><i class="icon-play"></i></button>
+                        <div class="btn-group">
+                            <a href="{{ server.ID }}/" class="btn btn-sm btn-primary"><i class="icon-edit"></i></a>
+                            {% if handler.application.usernames[current_user]['Is_Admin'] %}
+                            <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-danger"><i class="icon-trash"></i></button>
+                            {% end %}
+                            <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-warning"><i class="icon-stop"></i></button>
+                            <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-success" id="startServer"><i class="icon-play"></i></button>
+                        </div>
                     </td>
                 </tr>
                 {% end %}

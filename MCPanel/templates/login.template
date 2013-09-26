@@ -46,6 +46,9 @@
 <body>
 {% include "includes/navbar.template" %}
 <div class="container">
+    <noscript>
+        <h4 class="text-danger">It looks like you're not using Javascript! This website relies heavily on it (even the login box) so get with the times and get a modern browser.</h4><br>
+    </noscript><!-- Very Richard Stallman unfriendly stuff, here. -->
     <form class="form-signin"> <!-- Courtesy of http://getbootstrap.com/examples/signin/ -->
         <div id="message"></div>
         <h2 class="form-signin-heading">Please Login</h2>
@@ -62,6 +65,11 @@
 <script src="../static/js/jquery.cookie.js"></script>
 <script>
     $(function(){
+        function getURLParameter(name) {
+            return decodeURI(
+                (RegExp(name + '=' + '(.+?)(&|$)').exec(location.search)||[,null])[1]
+            );
+        }
         $("#loginButton").click(function(){
             var expires;
             if($("#rememberMe").prop("checked")){
@@ -80,7 +88,11 @@
                     }
                     $("#message").addClass("alert alert-success").text("Successfully logged in...").hide().fadeIn();
                     setTimeout(function(){
-                        window.location.href = "/"
+                        if(getURLParameter("next") == "null"){
+                            window.location.href = "/"
+                        } else {
+                            window.location.href = decodeURIComponent(getURLParameter("next"))
+                        }
                     }, 750)
                 }
             })

@@ -22,7 +22,6 @@
         <table id="userTable" class="table table-bordered">
             <thead>
             <tr>
-                <th style="width: 50px;">ID</th>
                 <th>Username</th>
                 <th style="width: 20px;">Admin</th>
                 <th style="width: 90px;">Actions</th>
@@ -31,11 +30,10 @@
             <tbody id="usersTable">
             {% for user in users %}
             <tr>
-                <td>{{ user.ID }}</td>
                 <td>{{ user.Username }}</td>
                 <td><input type="checkbox" {% if user.Is_Admin %}checked{% end %} disabled></td>
-                <td><button user-id="{{ user.ID }}" id="editUser" type="button" class="btn btn-warning btn-sm edit-button"><i class="icon-edit"></i></button>
-                    <button user-id="{{ user.ID }}" id="deleteUser" type="button" class="btn btn-danger btn-sm delete-button"><i class="icon-remove"></i></button></td>
+                <td><button user-id="{{ user.Username }}" id="editUser" type="button" class="btn btn-warning btn-sm edit-button"><i class="icon-edit"></i></button>
+                    <button user-id="{{ user.Username }}" id="deleteUser" type="button" class="btn btn-danger btn-sm delete-button"><i class="icon-remove"></i></button></td>
             </tr>
             {% end %}
             </tbody>
@@ -43,7 +41,7 @@
         <form class="form-inline" role="form" id="addUserForm">
             <div class="form-group">
                 <label>
-                    Username <input maxlength="255" type="text" class="form-control" id="addUserUsername" placeholder="Username">
+                    Username <input maxlength="64" type="text" class="form-control" id="addUserUsername" placeholder="Username">
                 </label>
             </div>
 
@@ -70,7 +68,7 @@
                     <div class="modal-body">
                         <div class="form-group">
                             <label>
-                                Username <input type="text" class="form-control" maxlength="255" id="editUserUsername" placeholder="Username">
+                                Username <input type="text" class="form-control" maxlength="64" id="editUserUsername" placeholder="Username" disabled>
                             </label>
                         </div>
 
@@ -79,7 +77,6 @@
                                 Admin <input type="checkbox" id="editUserIs_Admin">
                             </label>
                         </div>
-                        <input type="hidden" id="editUserId">
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -98,7 +95,7 @@
                     </div>
                     <div class="modal-body">
                         <p id="deleteUserText" class="text-danger">Are you sure you wish to delete ?</p>
-                        <input type="hidden" id="deleteUserId"> <!-- Hold user ID in an easy to access context -->
+                        <input type="hidden" id="deleteUserUserName"> <!-- Hold user name in an easy to access context -->
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -116,7 +113,7 @@
     $(function(){
         var users = {
         {% for user in users %}
-            {{ user.ID }}: {'Username': '{{ user.Username }}', 'Is_Admin': '{{ user.Is_Admin }}'},
+            {{ user.Username }}: {'Is_Admin': '{{ user.Is_Admin }}'},
         {% end %}
         };
 
@@ -127,12 +124,11 @@
             .done(function(data){
                 $("#usersTable").empty();
                 $(data['result']).each(function(index, name){
-                    $("#usersTable").append('<tr><td>' + data['result'][index]['id'] + '</td>' +
-                            '<td>' + data['result'][index]['username'] + '</td>' +
+                    $("#usersTable").append('<tr><td>' + data['result'][index]['username'] + '</td>' +
                             '<td><input type="checkbox" disabled ' + ((data['result'][index]['is_admin']) ? 'checked' :  '') + ' </td>' +
-                            '<td><button user-id="' + data['result'][index]['id'] + '" id="editUser" type="button" class="btn btn-warning btn-sm edit-button"><i class="icon-edit"></i></button> ' +
-                            '<button user-id="' + data['result'][index]['id'] + '" id="deleteUser" type="button" class="btn btn-danger btn-sm delete-button"><i class="icon-remove"></i></button></td></tr>');
-                    users[data['result'][index]['id']] = {"Username": data['result'][index]['username'], "Is_Admin": data['result'][index]['is_admin']}
+                            '<td><button user-id="' + data['result'][index]['username'] + '" id="editUser" type="button" class="btn btn-warning btn-sm edit-button"><i class="icon-edit"></i></button> ' +
+                            '<button user-id="' + data['result'][index]['username'] + '" id="deleteUser" type="button" class="btn btn-danger btn-sm delete-button"><i class="icon-remove"></i></button></td></tr>');
+                    users[data['result'][index]['username']] = {"Is_Admin": data['result'][index]['is_admin']}
                 });
                 $("#refreshTableIcon").removeClass("icon-spin")
             })
@@ -143,19 +139,18 @@
         });
         var usersTable = $("#usersTable");
         usersTable.on('click', '.edit-button', function(){
-            $("#editUserUsername").val(users[$(this).attr('user-id')]['Username']);
+            $("#editUserUsername").val($(this).attr('user-id'));
             if(users[$(this).attr('user-id')]['Is_Admin'] == 'True'){
                 $("#editUserIs_Admin").prop("checked", true)
             } else {
                 $("#editUserIs_Admin").prop("checked", false)
             }
-            $("#editUserTitle").text("Edit User: " + users[$(this).attr('user-id')]['Username']);
-            $("#editUserId").val($(this).attr('user-id'));
+            $("#editUserTitle").text("Edit User: " + $(this).attr('user-id'));
             $("#editModal").modal('show')
         });
 
         $("#editUserSubmit").click(function(){
-            $.post("ajax/editUser", {'user_id': $("#editUserId").val(), 'username': $("#editUserUsername").val(), 'is_admin': $("#editUserIs_Admin").prop("checked")})
+            $.post("ajax/editUser", {'username': $("#editUserUsername").val(), 'is_admin': $("#editUserIs_Admin").prop("checked")})
             .done(function(data){
                 if(data['result']['success']){
                     $.pnotify({
@@ -179,16 +174,14 @@
         });
 
         usersTable.on('click', '.delete-button', function(){
-            console.log($(this).attr('user-id'));
-            console.log(users);
-            $("#deleteUserTitle").text("Delete User: " + users[$(this).attr('user-id')]['Username']);
-            $("#deleteUserText").text("Are you sure you wish to delete '" + users[$(this).attr('user-id')]['Username'] + "'?")
-            $("#deleteUserId").val($(this).attr('user-id'));
+            $("#deleteUserUserName").val($(this).attr('user-id'));
+            $("#deleteUserTitle").text("Delete User: " + $(this).attr('user-id'));
+            $("#deleteUserText").text("Are you sure you wish to delete '" + $(this).attr('user-id') + "'?");
             $("#deleteModal").modal('show');
         });
 
         $("#deleteUserSubmit").click(function(ev, ob){
-            $.post("ajax/deleteUser", {'user': $("#deleteUserId").val()})
+            $.post("ajax/deleteUser", {'user': $("#deleteUserUserName").val()})
             .done(function(data){
                 if(data['result']['success']){
                     $.pnotify({

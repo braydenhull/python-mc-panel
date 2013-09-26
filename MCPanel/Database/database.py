@@ -32,8 +32,7 @@ class Database():
             raise self.UnsupportedDatabaseType()
 
         class Users(Model):
-            ID = PrimaryKeyField()
-            Username = CharField(null=False, unique=True, max_length=255)
+            Username = CharField(null=False, unique=True, max_length=64, primary_key=True)
             Password = CharField(null=False, max_length=76)  # Length of what sha1_crypt produces
             API_Key = CharField(null=True, default=None, unique=True, max_length=128)  # SHA256
             Session = CharField(null=True, max_length=128, default=None)  # SHA256
@@ -46,7 +45,7 @@ class Database():
             ID = PrimaryKeyField()
             Address = CharField(max_length=39, null=False)
             Port = IntegerField(null=False)
-            Owner = IntegerField(null=False)
+            Owner = CharField(null=False, max_length=64)
             Memory = IntegerField(null=False) # int as MB, translated to <memory>MB in start command
             ServerJar = CharField(max_length=128, null=False)
 
@@ -136,9 +135,6 @@ class Database():
         self.Role_Permissions.create(Role_ID=role_id, Permission_ID=perm_id)
 
     def assignUserToRole(self, user, role_id):
-        if type(user) is str or unicode:  # assume user is name and not ID and look up ID as a result
-            user = self.Users.select(self.Users.ID).where(self.Users.Username == user).get().ID
-
         self.User_Roles.update(Role_ID=role_id, User_ID=user).execute()
 
     def getRoles(self):
@@ -154,20 +150,11 @@ class Database():
         return self.Users.select()
 
     def deleteUser(self, user):
-        try:
-            user = int(user)
-        except ValueError:
-            pass
-        if type(user) is str:
-            (self.Users.get(self.Users.Username == user)).delete_instance()
-        else:
-            (self.Users.get(self.Users.ID == user)).delete_instance()
+        (self.Users.get(self.Users.Username == user)).delete_instance()
 
-    def editUser(self, user_id, username=None, password=None, api_key=None, session=None, is_admin=None):
+    def editUser(self, username, password=None, api_key=None, session=None, is_admin=None):
         user = self.Users()
-        user.ID = user_id
-        if type(username) is unicode:  # would've thought it'd be str, BUT NOO.. god damn unicode!
-            user.Username = username
+        user.Username = username
         if type(password) is unicode:
             user.Password = passlib.hash.sha1_crypt.encrypt(password, rounds=20000)
         if type(api_key) is unicode:

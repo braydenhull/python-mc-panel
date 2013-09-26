@@ -30,7 +30,7 @@ class Application(tornado.web.Application):
         self.sessionCache = {}
         self.title = self.config.get('panel', 'title')
         self.name = self.config.get('panel', 'name')
-        self.usernames = {} # mapping of all usernames to IDs
+        self.usernames = {} # has some info about user, like is_admin etc. just to save useless SQL stuff
         self.generateUsernameCache()
         self.supervisorAuth = {'Username': '', 'Password': ''}
         self.parseSupervisorConfig()
@@ -93,8 +93,7 @@ class Application(tornado.web.Application):
     def generateUsernameCache(self):
         users = self.db.getUsers()
         for user in users:
-            self.usernames[user.ID] = {'Username': user.Username, 'Is_Admin': user.Is_Admin}
-            self.usernames[user.Username] = {'ID': user.ID, 'Is_Admin': user.Is_Admin}
+            self.usernames[user.Username] = {'Is_Admin': user.Is_Admin}
 
     def parseSupervisorConfig(self):
         config = ConfigParser.RawConfigParser()

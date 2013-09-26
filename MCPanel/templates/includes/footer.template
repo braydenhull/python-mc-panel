@@ -1,0 +1,5 @@
+<script>
+    $(function(){
+        $("#{{ handler.__class__.__name__ }}").addClass("active")
+    })
+</script>
