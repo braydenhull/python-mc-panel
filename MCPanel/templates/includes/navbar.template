@@ -12,23 +12,33 @@
                 <li id="{{ handler.application.named_handlers['Home'].handler_class.__name__ }}"><a href="{{ reverse_url('Home') }}">Home</a></li>
                 <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Servers <b class="caret"></b></a>
-                <ul class="dropdown-menu">
-                    <li id="{{ handler.application.named_handlers['Servers_Index'].handler_class.__name__ }}"><a href="{{ reverse_url("Servers_Index") }}">Servers</a></li>
-                    <li class="divider"></li>
-                    {% for server in handler.application.db.getServers() %}
-                        {% if current_user == "Not Logged In" %}
-                            {% break %}
+                    <ul class="dropdown-menu">
+                        <li id="{{ handler.application.named_handlers['Servers_Index'].handler_class.__name__ }}"><a href="{{ reverse_url("Servers_Index") }}">Servers</a></li>
+                        <li class="divider"></li>
+                        {% for server in handler.application.db.getServers() %}
+                            {% if current_user == "Not Logged In" %}
+                                {% break %}
+                            {% end %}
+                            {% if server.Owner == current_user or handler.application.usernames[current_user]['Is_Admin'] %}
+                            <li><a href="{{ reverse_url("Servers_Index") }}{{ server.ID }}">{{ server.Address }}:{{ server.Port }}</a></li>
+                            {% end %}
                         {% end %}
-                        {% if server.Owner == current_user or handler.application.usernames[current_user]['Is_Admin'] %}
-                        <li><a href="{{ reverse_url("Servers_Index") }}{{ server.ID }}">{{ server.Address }}:{{ server.Port }}</a></li>
-                        {% end %}
-                    {% end %}
-                </ul>
+                    </ul>
                 </li>
             </ul>
             <ul class="nav navbar-nav pull-right">
                 <li><a class="navbar-brand" href="#"><i class="icon-user"></i> {{ current_user }}</a></li>
                 {% if not current_user == "Not Logged In" %}
+                {% if handler.application.usernames[current_user]['Is_Admin'] %}
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li id="{{ handler.application.named_handlers['Admin_Home'].handler_class.__name__ }}"><a href="{{ reverse_url("Admin_Home") }}">Home</a></li>
+                            <li id="{{ handler.application.named_handlers['Admin_Users'].handler_class.__name__ }}"><a href="{{ reverse_url("Admin_Users") }}">Users</a></li>
+                            <li id="{{ handler.application.named_handlers['Admin_Roles'].handler_class.__name__ }}"><a href="{{ reverse_url("Admin_Roles") }}">Roles</a></li>
+                        </ul>
+                    </li>
+                {% end %}
                 <li><a href="{{ reverse_url('Logout') }}">Logout</a></li>
                 {% end %}
             </ul>

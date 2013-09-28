@@ -12,13 +12,9 @@
 {% include "includes/navbar.template" %}
 <div class="container" style="padding-top: 10px;">
     <div class="col-md-12">
-        <button type="button" id="refreshTable" class="btn btn-primary pull-right"><i id="refreshTableIcon" class="icon-refresh"></i></button>
-        <ul class="nav nav-pills">
-            <li><a href="/admin/">Admin Home</a></li>
-            <li class="active"><a href="users">User Management</a></li>
-            <li><a href="roles">Role Management</a></li>
-        </ul>
-        <br>
+        <div style="padding-bottom: 20px;">
+            <button type="button" id="refreshTable" class="btn btn-primary pull-right"><i id="refreshTableIcon" class="icon-refresh"></i></button>
+        </div><br>
         <table id="userTable" class="table table-bordered">
             <thead>
             <tr>

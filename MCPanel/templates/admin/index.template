@@ -11,11 +11,6 @@
 {% include "includes/navbar.template" %}
 <div class="container" style="padding-top: 10px;">
     <div class="col-md-12">
-        <ul class="nav nav-pills">
-            <li class="active"><a href="/admin/">Admin Home</a></li>
-            <li><a href="users">User Management</a></li>
-            <li><a href="roles">Role Management</a></li>
-        </ul>
     </div>
 </div>
 <script src="../../static/js/jquery-2.0.3.min.js"></script>
