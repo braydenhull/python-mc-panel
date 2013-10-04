@@ -16,7 +16,7 @@ class EditUserHandler(BaseAdminAjaxHandler):
                 else:
                     is_admin = False
                 self.application.db.editUser(self.get_argument('username'), is_admin=is_admin)
-                self.application.generateUsernameCache()
+                self.application.generate_username_cache()
                 self.finish({'result': {'success': True, 'message': 'User was successfully modified.'}})
             except Exception as e:
                 self.finish({'result': {'success': False, 'message': e.message}})

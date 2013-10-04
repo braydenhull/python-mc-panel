@@ -45,8 +45,8 @@ def main():
     application = Application()
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(port=80, address=None)  # ipv4 and v6
-    tornado.ioloop.PeriodicCallback(application.dbPing, int(config().get('database', 'ping-interval')) * 1000).start()
-    tornado.ioloop.PeriodicCallback(application.generateUsernameCache, 3600 * 1000).start()
+    tornado.ioloop.PeriodicCallback(application.db_ping, int(config().get('database', 'ping-interval')) * 1000).start()
+    tornado.ioloop.PeriodicCallback(application.generate_username_cache, 3600 * 1000).start()
     tornado.ioloop.IOLoop.instance().start()
 
 main()

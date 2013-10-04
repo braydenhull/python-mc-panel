@@ -80,6 +80,7 @@
 
             $.post("ajax/performLogin", {'username': $("#usernameField").val(), 'password': $("#passwordField").val(), 'expires': expires})
             .done(function(data){
+                $("#message").removeClass("alert-danger");
                 if(!data['result']['success']){
                     $("#message").addClass("alert alert-danger").text(data['result']['message']).hide().fadeIn()
                 } else {

@@ -14,7 +14,7 @@ class BaseHandler(tornado.web.RequestHandler):
                 username = (base64.decodestring(cookie.split('|')[0])).strip()
                 session = cookie.split('|')[1]
                 try:
-                    if self.application.checkSession(username, session):
+                    if self.application.check_session(username, session):
                         return username
                 except DoesNotExist:
                     return None
@@ -25,5 +25,6 @@ class BaseHandler(tornado.web.RequestHandler):
         ns.update({
             'title': self.application.title,
             'name': self.application.name,
+            'process_prefix': 'minecraft_',
         })
         return ns

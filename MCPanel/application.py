@@ -21,33 +21,38 @@ from Handlers.Admin.Ajax.AddUser import AddUserHandler
 from Handlers.Admin.Ajax.DeleteUser import DeleteUserHandler
 from Handlers.Admin.Ajax.EditUser import EditUserHandler
 from Handlers.Servers.Index import ServersIndexHandler
+from Handlers.Servers.Server.Index import ServerIndexHandler
+from Handlers.Servers.Server.Players import ServerPlayersHandler
 
 
 class Application(tornado.web.Application):
     def __init__(self):
         self.config = config()
         self.db = Database.database.Database()
-        self.sessionCache = {}
+        self.session_cache = {}
         self.title = self.config.get('panel', 'title')
         self.name = self.config.get('panel', 'name')
         self.usernames = {} # has some info about user, like is_admin etc. just to save useless SQL stuff
-        self.generateUsernameCache()
-        self.supervisorAuth = {'Username': '', 'Password': ''}
-        self.parseSupervisorConfig()
-        self.supervisor = Supervisor(self.supervisorAuth['Username'], self.supervisorAuth['Password'])
+        self.generate_username_cache()
+        self.supervisor_auth = {'Username': '', 'Password': ''}
+        self.parse_supervisor_config()
+        self.supervisor = Supervisor(self.supervisor_auth['Username'], self.supervisor_auth['Password'])
+        #print self.supervisor.is_process_running('minecraft_1')
         handlers = [
             ('Home', r'/', IndexHandler),
             ('Login', r'/login', LoginHandler),
             ('PerformLogin', r'/ajax/performLogin', PerformLoginHandler),
             ('Logout', r'/logout', LogoutHandler),
-            ('Admin_Home', r'/admin/', AdminIndex),
+            ('Admin_Home', r'/admin/?', AdminIndex),
             ('Admin_Users', r'/admin/users', AdminUsers),
             ('Admin_Roles', r'/admin/roles', AdminRoles),
             ('Admin_Ajax_GetUsers', r'/admin/ajax/getUsers', GetUserHandler),
             ('Admin_Ajax_AddUser', r'/admin/ajax/addUser', AddUserHandler),
             ('Admin_Ajax_DeleteUser', r'/admin/ajax/deleteUser', DeleteUserHandler),
             ('Admin_Ajax_EditUser', r'/admin/ajax/editUser', EditUserHandler),
-            ('Servers_Index', r'/servers/', ServersIndexHandler),
+            ('Servers_Index', r'/servers/?', ServersIndexHandler),
+            ('Server_Index', r'/servers/(\d+)/', ServerIndexHandler),
+            ('Server_Players', r'/servers/(\d+)/players', ServerPlayersHandler),
         ]
         handlers = [URLSpec(pattern, handler, name=name) for name, pattern, handler in handlers]
         settings = dict(
@@ -58,7 +63,6 @@ class Application(tornado.web.Application):
             static_path=os.path.join(os.path.dirname(__file__), 'static'),
         )
         tornado.web.Application.__init__(self, handlers, **settings)
-        print self.named_handlers
 
     def acl(self, required_access, current_user, server_id):
         user_perms = ['test', 'perm1']
@@ -68,35 +72,35 @@ class Application(tornado.web.Application):
         else:
             raise tornado.web.HTTPError(403)
 
-    def makeSession(self, username):
+    def make_session(self, username):
         session = hashlib.sha256(os.urandom(32)).hexdigest()
-        self.sessionCache[username] = session
+        self.session_cache[username] = session
         self.db.insertSession(username, session)
         return session
 
-    def checkSession(self, username, session):
-        if 'username' in self.sessionCache:
-            if self.sessionCache[username] == session:
+    def check_session(self, username, session):
+        if 'username' in self.session_cache:
+            if self.session_cache[username] == session:
                 return True
             else:
                 return False
         else:  # not cached, due to daemon restart? fallback onto more expensive method
             if self.db.getSession(username) == session:
-                self.sessionCache[username] = session  # push it into the cache
+                self.session_cache[username] = session  # push it into the cache
                 return True
             else:
                 return False
 
-    def dbPing(self):
+    def db_ping(self):
         self.db.ping()
 
-    def generateUsernameCache(self):
+    def generate_username_cache(self):
         users = self.db.getUsers()
         for user in users:
             self.usernames[user.Username] = {'Is_Admin': user.Is_Admin}
 
-    def parseSupervisorConfig(self):
+    def parse_supervisor_config(self):
         config = ConfigParser.RawConfigParser()
         config.read('/etc/supervisor/supervisord.conf')
-        self.supervisorAuth['Username'] = config.get('inet_http_server', 'username')
-        self.supervisorAuth['Password'] = config.get('inet_http_server', 'password')
+        self.supervisor_auth['Username'] = config.get('inet_http_server', 'username')
+        self.supervisor_auth['Password'] = config.get('inet_http_server', 'password')

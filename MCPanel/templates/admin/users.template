@@ -116,7 +116,7 @@
         function reloadTable(){
             users = {};
             $("#refreshTableIcon").addClass('icon-spin');
-            $.post("ajax/getUsers")
+            $.post("{{ reverse_url("Admin_Ajax_GetUsers") }}")
             .done(function(data){
                 $("#usersTable").empty();
                 $(data['result']).each(function(index, name){
@@ -136,7 +136,7 @@
         var usersTable = $("#usersTable");
         usersTable.on('click', '.edit-button', function(){
             $("#editUserUsername").val($(this).attr('user-id'));
-            if(users[$(this).attr('user-id')]['Is_Admin'] == 'True'){
+            if(users[$(this).attr('user-id')]['Is_Admin'] == 'True' || users[$(this).attr('user-id')]['Is_Admin']){
                 $("#editUserIs_Admin").prop("checked", true)
             } else {
                 $("#editUserIs_Admin").prop("checked", false)
@@ -146,7 +146,7 @@
         });
 
         $("#editUserSubmit").click(function(){
-            $.post("ajax/editUser", {'username': $("#editUserUsername").val(), 'is_admin': $("#editUserIs_Admin").prop("checked")})
+            $.post("{{ reverse_url("Admin_Ajax_EditUser") }}", {'username': $("#editUserUsername").val(), 'is_admin': $("#editUserIs_Admin").prop("checked")})
             .done(function(data){
                 if(data['result']['success']){
                     $.pnotify({
@@ -177,7 +177,7 @@
         });
 
         $("#deleteUserSubmit").click(function(ev, ob){
-            $.post("ajax/deleteUser", {'user': $("#deleteUserUserName").val()})
+            $.post("{{ reverse_url("Admin_Ajax_DeleteUser") }}", {'user': $("#deleteUserUserName").val()})
             .done(function(data){
                 if(data['result']['success']){
                     $.pnotify({
@@ -201,7 +201,7 @@
         });
 
         $("#addUserSubmit").click(function(){
-            $.post("ajax/addUser", {'username': $("#addUserUsername").val(), 'password': $("#addUserPassword").val(), 'is_admin': $("#addUserAdminCheckbox").prop("checked")})
+            $.post("{{ reverse_url("Admin_Ajax_AddUser") }}", {'username': $("#addUserUsername").val(), 'password': $("#addUserPassword").val(), 'is_admin': $("#addUserAdminCheckbox").prop("checked")})
             .done(function(data){
                 if(data['result']['success']){
                     $("#addUserUsername").val("");

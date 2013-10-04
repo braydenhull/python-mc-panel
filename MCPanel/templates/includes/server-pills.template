@@ -1,0 +1,6 @@
+    <div class="col-md-2">
+        <ul class="nav nav-pills nav-stacked">
+            <li id="{{ handler.application.named_handlers['Server_Index'].handler_class.__name__ }}"><a href="{{ reverse_url("Server_Index", server_id) }}">Dashboard</a></li>
+            <li id="{{ handler.application.named_handlers['Server_Players'].handler_class.__name__ }}"><a href="{{ reverse_url("Server_Players", server_id) }}">Players</a></li>
+        </ul>
+    </div>

@@ -20,7 +20,7 @@
                                 {% break %}
                             {% end %}
                             {% if server.Owner == current_user or handler.application.usernames[current_user]['Is_Admin'] %}
-                            <li><a href="{{ reverse_url("Servers_Index") }}{{ server.ID }}">{{ server.Address }}:{{ server.Port }}</a></li>
+                            <li id="server-id{{ server.ID }}"><a href="{{ reverse_url("Server_Index", server.ID) }}">{{ server.Address }}:{{ server.Port }}</a></li>
                             {% end %}
                         {% end %}
                     </ul>
