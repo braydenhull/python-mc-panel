@@ -25,6 +25,7 @@ class BaseHandler(tornado.web.RequestHandler):
         ns.update({
             'title': self.application.title,
             'name': self.application.name,
-            'process_prefix': 'minecraft_',
+            'process_prefix': self.application.process_prefix,
+            'servers': self.application.db.getServers(),
         })
         return ns

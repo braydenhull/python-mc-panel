@@ -78,7 +78,7 @@
                 expires = 3; // 3 days otherwise
             } // technically you could set it as long as you want and it'll work, there's no internal periodic removal of sessions which should've expired
 
-            $.post("ajax/performLogin", {'username': $("#usernameField").val(), 'password': $("#passwordField").val(), 'expires': expires})
+            $.post("{{ reverse_url("PerformLogin") }}", {'username': $("#usernameField").val(), 'password': $("#passwordField").val(), 'expires': expires})
             .done(function(data){
                 $("#message").removeClass("alert-danger");
                 if(!data['result']['success']){

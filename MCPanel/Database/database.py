@@ -46,8 +46,9 @@ class Database():
             Address = CharField(max_length=39, null=False)
             Port = IntegerField(null=False)
             Owner = CharField(null=False, max_length=64)
-            Memory = IntegerField(null=False) # int as MB, translated to <memory>MB in start command
+            Memory = IntegerField(null=False)  # int as MB, translated to <memory>MB in start command
             ServerJar = CharField(max_length=128, null=False)
+            Type = CharField(max_length=128, null=False)  # craftbukkit, minecraft, etc.
 
             class Meta:
                 database = self.database
@@ -109,11 +110,31 @@ class Database():
         password = passlib.hash.sha1_crypt.encrypt(password, rounds=20000)
         self.Users.create(Username=escape.xhtml_escape(username), Password=password, Is_Admin=is_admin, force_insert=True)
 
-    def addServer(self, address, port, memory, owner):
-        self.Servers.create(Address=address, Port=port, Memory=memory, Owner=owner, ServerJar='minecraft.jar')
+    def addServer(self, address, port, memory, owner, server_type="craftbukkit"):
+        self.Servers.create(Address=address, Port=port, Memory=memory, Owner=owner, ServerJar='minecraft.jar', Type=server_type)
 
     def getServers(self):
         return self.Servers.select()
+
+    def serverExists(self, server_id):
+        try:
+            self.Servers.select().where(self.Servers.ID == server_id).get()
+            return True
+        except DoesNotExist:
+            return False
+
+    def getServerID(self, address, port):
+        return self.Servers.select().where(self.Servers.Address == address, self.Servers.Port == port).get().ID
+
+    def isAddressTaken(self, address, port):
+        try:
+            if address == '0.0.0.0':
+                self.Servers.select().where(self.Servers.Port == port).get()
+            else:
+                self.Servers.select().where(self.Servers.Address == address, self.Servers.Port == port).get()
+            return True
+        except DoesNotExist:
+            return False
 
     def insertSession(self, username, session):
         self.Users.update(Session=session).where(self.Users.Username == username).execute()

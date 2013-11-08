@@ -7,5 +7,5 @@ from Base import BaseHandler
 class LoginHandler(BaseHandler):
     @asynchronous
     def get(self):
-        self.render(self.application.settings['template_path'] + '/login.template', pageName="Login",
+        self.render(self.application.settings['template_path'] + '/login.template',
                     current_user="Not Logged In")

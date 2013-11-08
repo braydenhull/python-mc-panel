@@ -15,7 +15,7 @@
                     <ul class="dropdown-menu">
                         <li id="{{ handler.application.named_handlers['Servers_Index'].handler_class.__name__ }}"><a href="{{ reverse_url("Servers_Index") }}">Servers</a></li>
                         <li class="divider"></li>
-                        {% for server in handler.application.db.getServers() %}
+                        {% for server in servers %}
                             {% if current_user == "Not Logged In" %}
                                 {% break %}
                             {% end %}

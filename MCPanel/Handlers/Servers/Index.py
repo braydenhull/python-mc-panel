@@ -12,5 +12,4 @@ class ServersIndexHandler(BaseServersHandler):
     @addslash
     def get(self):
         #self.application.acl([], self.current_user, 1)
-        self.render(self.application.settings['template_path'] + '/servers/index.template',
-                    pageName="Minecraft Servers")
+        self.render(self.application.settings['template_path'] + '/servers/index.template')

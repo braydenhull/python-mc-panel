@@ -23,7 +23,8 @@ from Handlers.Admin.Ajax.EditUser import EditUserHandler
 from Handlers.Servers.Index import ServersIndexHandler
 from Handlers.Servers.Server.Index import ServerIndexHandler
 from Handlers.Servers.Server.Players import ServerPlayersHandler
-
+from Handlers.Servers.WebSocket.CreateServer import CreateServerHandler
+from Handlers.Servers.Ajax.CheckAddress import CheckAddressHandler
 
 class Application(tornado.web.Application):
     def __init__(self):
@@ -32,12 +33,13 @@ class Application(tornado.web.Application):
         self.session_cache = {}
         self.title = self.config.get('panel', 'title')
         self.name = self.config.get('panel', 'name')
-        self.usernames = {} # has some info about user, like is_admin etc. just to save useless SQL stuff
+        self.supervisor_config_path = self.config.get('supervisor', 'configuration')
+        self.usernames = {}  # has some info about user, like is_admin etc. just to save useless SQL stuff
         self.generate_username_cache()
         self.supervisor_auth = {'Username': '', 'Password': ''}
         self.parse_supervisor_config()
+        self.process_prefix = "minecraft_"
         self.supervisor = Supervisor(self.supervisor_auth['Username'], self.supervisor_auth['Password'])
-        #print self.supervisor.is_process_running('minecraft_1')
         handlers = [
             ('Home', r'/', IndexHandler),
             ('Login', r'/login', LoginHandler),
@@ -53,6 +55,8 @@ class Application(tornado.web.Application):
             ('Servers_Index', r'/servers/?', ServersIndexHandler),
             ('Server_Index', r'/servers/(\d+)/', ServerIndexHandler),
             ('Server_Players', r'/servers/(\d+)/players', ServerPlayersHandler),
+            ('Servers_WebSocket_CreateServer', r'/servers/websocket/createserver', CreateServerHandler),
+            ('Servers_Ajax_CheckAddress', r'/servers/ajax/checkAddress', CheckAddressHandler),
         ]
         handlers = [URLSpec(pattern, handler, name=name) for name, pattern, handler in handlers]
         settings = dict(
@@ -101,6 +105,6 @@ class Application(tornado.web.Application):
 
     def parse_supervisor_config(self):
         config = ConfigParser.RawConfigParser()
-        config.read('/etc/supervisor/supervisord.conf')
+        config.read(self.supervisor_config_path)
         self.supervisor_auth['Username'] = config.get('inet_http_server', 'username')
         self.supervisor_auth['Password'] = config.get('inet_http_server', 'password')
