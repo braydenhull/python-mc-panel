@@ -108,9 +108,11 @@
 
                                     <label>
                                         Build
-                                        <select class="form-control" id="craftbukkit_BuildSelect"></select>
+                                        <select class="form-control" id="craftbukkit_BuildSelect">
+                                        </select>
                                     </label>
                                 </div>
+                                <strong>Build Version: </strong><span id="craftbukkit_BuildVersion"></span>
                             </div>
 
                         </div>
@@ -130,15 +132,35 @@
 <script>
     $(function(){
         var server;
+        $("[id^=craftbukkit]").each(function(index){
+            console.log(index);
+        });
         $("#criticalError").hide();
         $("#craftbukkit_Form").hide();
         $("#serverSelection").change(function(event){
             server = event.currentTarget.value;
-            console.log(server);
             if(server === "craftbukkit"){
                 $("#craftbukkit_Form").slideDown();
+                $.post('{{ reverse_url('Servers_Ajax_GetInfo') }}', {'server_type': server, 'request_type': 'get_streams'}).done(function(data){
+                    $("#craftbukkit_BuildChannel").empty();
+                    $.each(data['result']['results']['values'], function(index){
+                        $("#craftbukkit_BuildChannel").append($("<option></option>").val(data['result']['results']['values'][index]['value']).html(data['result']['results']['values'][index]['name']))
+                    });
+                    refresh_build_list()
+                });
             }
         });
+
+        function refresh_build_list(){
+            $.post('{{ reverse_url('Servers_Ajax_GetInfo') }}', {'server_type': server, 'request_type': 'get_builds', 'stream': $("#craftbukkit_BuildChannel").val()}).done(function(data){
+                if(data['result']['success']){
+                    $("#craftbukkit_BuildSelect").empty();
+                    $.each(data['result']['results']['builds'], function(index, val){
+                        $("#craftbukkit_BuildSelect").append($("<option></option>").val(val).html(val))
+                    })
+                }
+            })
+        }
 
         $("#memorySlider").slider({
             range: "max",
@@ -163,6 +185,17 @@
                         $("#errorMessage").text(); // Reset error
                         $("#addressForm").removeClass().addClass("form-inline has-success")
                     }
+                })
+            }
+        });
+
+        $("[id*=BuildChannel],[id*=BuildSelect]").change(function(event){
+            console.log(event['currentTarget']['id']);
+            if(event['currentTarget']['id'].split('_')[1] === 'BuildChannel'){
+                refresh_build_list()
+            } else if(event['currentTarget']['id'].split('_')[1] == 'BuildSelect'){
+                $.post('{{ reverse_url('Servers_Ajax_GetInfo') }}', {'server_type': server, 'request_type': 'get_build_info', 'build': $("#"+ event['currentTarget']['id']).val()}).done(function(data){
+                    $("#" + server + "_BuildVersion").text(data['result']['results']['info']['version'])
                 })
             }
         })

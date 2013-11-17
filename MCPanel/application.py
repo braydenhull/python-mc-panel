@@ -25,6 +25,8 @@ from Handlers.Servers.Server.Index import ServerIndexHandler
 from Handlers.Servers.Server.Players import ServerPlayersHandler
 from Handlers.Servers.WebSocket.CreateServer import CreateServerHandler
 from Handlers.Servers.Ajax.CheckAddress import CheckAddressHandler
+from Handlers.Servers.Ajax.GetInfo import GetInfoHandler
+
 
 class Application(tornado.web.Application):
     def __init__(self):
@@ -57,6 +59,7 @@ class Application(tornado.web.Application):
             ('Server_Players', r'/servers/(\d+)/players', ServerPlayersHandler),
             ('Servers_WebSocket_CreateServer', r'/servers/websocket/createserver', CreateServerHandler),
             ('Servers_Ajax_CheckAddress', r'/servers/ajax/checkAddress', CheckAddressHandler),
+            ('Servers_Ajax_GetInfo', r'/servers/ajax/getInfo', GetInfoHandler),
         ]
         handlers = [URLSpec(pattern, handler, name=name) for name, pattern, handler in handlers]
         settings = dict(

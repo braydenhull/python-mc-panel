@@ -14,7 +14,7 @@ class CreateServerHandler(BaseWebSocketHandler):
 
     def on_message(self, message):
         try:
-            message = json.loads(message)  # looks like {"action": "create", "params": {"memory": 512, "address": "192.168.2.3", "port": 25565, "type": "craftbukkit", "build": "latest", "stream": "rb"}, "authentication": "<cookie value>"}
+            message = json.loads(message)  # looks like {"params": {"memory": 512, "address": "192.168.2.3", "port": 25565, "type": "craftbukkit", "build": "latest", "stream": "rb"}, "authentication": "<cookie value>", "owner": "<owner, str>"}
             session = tornado.escape.url_unescape(message['authentication'])
             auth = False
             username = None
@@ -34,14 +34,14 @@ class CreateServerHandler(BaseWebSocketHandler):
             else:
                 self.write_message({'success': False, "message": "Bad authentication"})
 
-            if message['action'] == "create" and auth:
-                username = username
+            if auth:
                 memory = message['params']['memory']
                 address = message['params']['address']
                 port = message['params']['port']
                 server_type = message['params']['type']
+                owner = message['owner']
                 if not self.application.db.isAddressTaken(address, port):
-                    self.application.db.addServer(address, port, memory, username, server_type=server_type)
+                    self.application.db.addServer(address, port, memory, owner, server_type=server_type)
                     self.write_message({"success": True, "message": "Added server to database."})
                     server_id = self.application.db.getServerID(address, port)
                     self.server_id = server_id
@@ -50,11 +50,8 @@ class CreateServerHandler(BaseWebSocketHandler):
                         self.write_message({"message": "entered bukkit", "success": True})
                         Bukkit().install(self, **message['params'])
                     else:
-                        self.write_message({"success": False, "message": "Type not implemented."})
+                            self.write_message({"success": False, "message": "Type not implemented."})
                 else:
                     self.write_message({"success": False, "message": "IP/Port combination already taken."})
-            else:
-                self.write_message({"success": False, "message": "Unrecognised action."})
-
         except ValueError or KeyError:
             self.write_message({"success": False, "message": "Not well formatted message."})

@@ -33,7 +33,7 @@ class Bukkit:
 
     def _get_build_info(self):
         if not type(self.build) is int:
-            raise self.BukkitProvisionError("Invalid build nubmer.", "InvalidBuildNumber")
+            raise self.BukkitProvisionError("Invalid build number", "InvalidBuildNumber")
         if self.build == 0:
             request = urllib2.Request('http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/view/latest/?_accept=application%2Fjson')
         else:
@@ -96,3 +96,24 @@ class Bukkit:
                 self.ws.write_message({"success": True, "message": "Starting server!"})
         else:
             self.ws.write_message({"success": False, "message": "HTTP Request was not successful. %s: %s" % (response.code, response.reason)})
+
+    def get_streams(self):
+        return {"values": [{"value": "rb", "name": "Recommended"},
+            {"value": "dev", "name": "Development"},
+            {"value": "beta", "name": "Beta"}]}
+
+    def get_builds(self):
+        builds = []
+        for build in self._get_builds()['results']:
+            builds.append(build['build_number'])
+        return {"builds": builds}
+
+    def get_build_info(self):
+        build_info = self._get_build_info()
+
+        return {"info": {"build_number": build_info['build_number'],
+                                          "created": build_info['created'],
+                                          "version": build_info['version'],
+                                          "md5": build_info['file']['checksum_md5'],
+                                          "size": build_info['file']['size'],
+                                          "name": build_info['channel']['name']}}
