@@ -13,7 +13,7 @@
 <div class="container" style="padding-top: 10px;">
     <div class="col-md-12">
         <div style="padding-bottom: 20px;">
-            <button type="button" id="refreshTable" class="btn btn-primary pull-right"><i id="refreshTableIcon" class="icon-refresh"></i></button>
+            <button type="button" id="refreshTable" class="btn btn-primary pull-right"><i id="refreshTableIcon" class="fa fa-refresh"></i></button>
         </div><br>
         <table id="userTable" class="table table-bordered">
             <thead>
@@ -28,8 +28,8 @@
             <tr>
                 <td>{{ user.Username }}</td>
                 <td><input type="checkbox" {% if user.Is_Admin %}checked{% end %} disabled></td>
-                <td><button user-id="{{ user.Username }}" id="editUser" type="button" class="btn btn-warning btn-sm edit-button"><i class="icon-edit"></i></button>
-                    <button user-id="{{ user.Username }}" id="deleteUser" type="button" class="btn btn-danger btn-sm delete-button"><i class="icon-remove"></i></button></td>
+                <td><button user-id="{{ user.Username }}" id="editUser" type="button" class="btn btn-warning btn-sm edit-button"><i class="fa fa-edit"></i></button>
+                    <button user-id="{{ user.Username }}" id="deleteUser" type="button" class="btn btn-danger btn-sm delete-button"><i class="fa fa-trash-o"></i></button></td>
             </tr>
             {% end %}
             </tbody>
@@ -115,18 +115,18 @@
 
         function reloadTable(){
             users = {};
-            $("#refreshTableIcon").addClass('icon-spin');
+            $("#refreshTableIcon").addClass('fa-spin');
             $.post("{{ reverse_url("Admin_Ajax_GetUsers") }}")
             .done(function(data){
                 $("#usersTable").empty();
                 $(data['result']).each(function(index, name){
                     $("#usersTable").append('<tr><td>' + data['result'][index]['username'] + '</td>' +
                             '<td><input type="checkbox" disabled ' + ((data['result'][index]['is_admin']) ? 'checked' :  '') + ' </td>' +
-                            '<td><button user-id="' + data['result'][index]['username'] + '" id="editUser" type="button" class="btn btn-warning btn-sm edit-button"><i class="icon-edit"></i></button> ' +
-                            '<button user-id="' + data['result'][index]['username'] + '" id="deleteUser" type="button" class="btn btn-danger btn-sm delete-button"><i class="icon-remove"></i></button></td></tr>');
+                            '<td><button user-id="' + data['result'][index]['username'] + '" id="editUser" type="button" class="btn btn-warning btn-sm edit-button"><i class="fa fa-edit"></i></button> ' +
+                            '<button user-id="' + data['result'][index]['username'] + '" id="deleteUser" type="button" class="btn btn-danger btn-sm delete-button"><i class="fa fa-trash-o"></i></button></td></tr>');
                     users[data['result'][index]['username']] = {"Is_Admin": data['result'][index]['is_admin']}
                 });
-                $("#refreshTableIcon").removeClass("icon-spin")
+                $("#refreshTableIcon").removeClass("fa-spin")
             })
 
         }

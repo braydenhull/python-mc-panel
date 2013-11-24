@@ -5,7 +5,6 @@ from urllib2 import HTTPError
 import urllib2
 from tornado.httpclient import AsyncHTTPClient
 import os
-import subprocess
 import pwd
 
 
@@ -21,6 +20,7 @@ class Bukkit:
         self.user_agent = 'python-mc-panel/0.1-dev'
         self.opener = urllib2.build_opener()
         self.opener.addheaders = [{'User-Agent', self.user_agent}]
+        self.client = AsyncHTTPClient()
         urllib2.install_opener(self.opener)
 
     class BukkitProvisionError(Exception):
@@ -31,14 +31,20 @@ class Bukkit:
         def __str__(self):
             return repr(self.message)
 
-    def _get_build_info(self):
+    def _get_build_info(self, just_url=False):
         if not type(self.build) is int:
             raise self.BukkitProvisionError("Invalid build number", "InvalidBuildNumber")
         if self.build == 0:
-            request = urllib2.Request('http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/view/latest/?_accept=application%2Fjson')
+            if just_url:
+                return 'http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/view/latest/?_accept=application%2Fjson'
+            else:
+                request = urllib2.Request('http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/view/latest/?_accept=application%2Fjson')
         else:
             try:
-                request = urllib2.Request('http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/view/build-' + str(self.build) + '/?_accept=application%2Fjson')
+                if just_url:
+                    return 'http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/view/build-' + str(self.build) + '/?_accept=application%2Fjson'
+                else:
+                    request = urllib2.Request('http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/view/build-' + str(self.build) + '/?_accept=application%2Fjson')
             except HTTPError as e:
                 if e.code == 404:
                     raise self.BukkitProvisionError("Build number not found.", "UnknownBuild")
@@ -51,10 +57,13 @@ class Bukkit:
 
         return result
 
-    def _get_builds(self, page=1):
+    def _get_builds(self, page=1, just_url=False):
         if not type(page) is int:
             raise TypeError
-        request = urllib2.Request('http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/artifacts/' +  self.channel + '/?_accept=application%2Fjson&page=' + str(page))
+        if just_url:
+            return 'http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/artifacts/' +  self.channel + '/?_accept=application%2Fjson&page=' + str(page)
+        else:
+            request = urllib2.Request('http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/artifacts/' +  self.channel + '/?_accept=application%2Fjson&page=' + str(page))
         result = urllib2.urlopen(request).read()
         result = json.loads(result)
         if result['results'] == 0:
@@ -97,23 +106,35 @@ class Bukkit:
         else:
             self.ws.write_message({"success": False, "message": "HTTP Request was not successful. %s: %s" % (response.code, response.reason)})
 
-    def get_streams(self):
-        return {"values": [{"value": "rb", "name": "Recommended"},
+    def get_streams(self, handler):
+        handler.finish({"values": [{"value": "rb", "name": "Recommended"},
             {"value": "dev", "name": "Development"},
-            {"value": "beta", "name": "Beta"}]}
+            {"value": "beta", "name": "Beta"}]})
 
-    def get_builds(self):
+    def get_builds(self, handler):
+        self.handler = handler
+        self.client.fetch(self._get_builds(just_url=True), self.get_builds_http_handler, user_agent=self.user_agent)
+
+    def get_builds_http_handler(self, response):
+        response = json.loads(response.body)['results']
         builds = []
-        for build in self._get_builds()['results']:
+        for build in response:
             builds.append(build['build_number'])
-        return {"builds": builds}
+        self.handler.finish({'result': {
+            'message': None,
+            'results': {'builds': builds, 'latest_version': response[0]['version']},
+            'success': True
+        }})
 
-    def get_build_info(self):
-        build_info = self._get_build_info()
+    def get_build_info(self, handler):
+        self.handler = handler
+        self.client.fetch(self._get_build_info(just_url=True), self.get_build_info_http_handler, user_agent=self.user_agent)
 
-        return {"info": {"build_number": build_info['build_number'],
+    def get_build_info_http_handler(self, response):
+        build_info = json.loads(response.body)
+        self.handler.finish({"info": {"build_number": build_info['build_number'],
                                           "created": build_info['created'],
                                           "version": build_info['version'],
-                                          "md5": build_info['file']['checksum_md5'],
+                                         "md5": build_info['file']['checksum_md5'],
                                           "size": build_info['file']['size'],
-                                          "name": build_info['channel']['name']}}
+                                          "name": build_info['channel']['name']}})

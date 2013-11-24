@@ -49,7 +49,7 @@
             {% end %}
             </tbody>
         </table>
-
+        {% if handler.application.usernames[current_user]['Is_Admin'] %}
         <a data-toggle="modal" type="button" class="btn btn-primary" id="createServer" href="#createServerModal">Create Server</a>
         <div>
             <div class="modal fade" id="createServerModal" tabindex="-1" role="dialog">
@@ -57,7 +57,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title">Create New Server</h4>
+                            <h4 class="modal-title"><i id="refresh" class="fa fa-refresh"></i> Create New Server</h4>
                         </div>
                         <div class="modal-body">
                             <div class="alert alert-block alert-danger" id="criticalError">
@@ -69,6 +69,14 @@
                                 <select id="serverSelection" class="form-control">
                                     <option>Please select an option</option>
                                     <option value="craftbukkit">CraftBukkit</option>
+                                </select>
+                            </label>
+                            <label>
+                                Server Owner
+                                <select id="serverOwner" class="form-control">
+                                    {% for user in handler.application.db.getUsers() %}
+                                    <option>{{ user.Username }}</option>
+                                    {% end %}
                                 </select>
                             </label>
                             <br><br>
@@ -124,6 +132,7 @@
                 </div>
             </div>
         </div>
+        {% end %}
     </div>
 </div>
 <script src="../../static/js/jquery-2.0.3.min.js"></script>
@@ -141,24 +150,27 @@
             server = event.currentTarget.value;
             if(server === "craftbukkit"){
                 $("#craftbukkit_Form").slideDown();
+                $("#refresh").addClass("fa-spin");
                 $.post('{{ reverse_url('Servers_Ajax_GetInfo') }}', {'server_type': server, 'request_type': 'get_streams'}).done(function(data){
                     $("#craftbukkit_BuildChannel").empty();
                     $.each(data['result']['results']['values'], function(index){
                         $("#craftbukkit_BuildChannel").append($("<option></option>").val(data['result']['results']['values'][index]['value']).html(data['result']['results']['values'][index]['name']))
                     });
-                    refresh_build_list()
+                    refresh_build_list(server)
                 });
             }
         });
 
-        function refresh_build_list(){
-            $.post('{{ reverse_url('Servers_Ajax_GetInfo') }}', {'server_type': server, 'request_type': 'get_builds', 'stream': $("#craftbukkit_BuildChannel").val()}).done(function(data){
+        function refresh_build_list(type){
+            $.post('{{ reverse_url('Servers_Ajax_GetInfo') }}', {'server_type': type, 'request_type': 'get_builds', 'stream': $("#" + type + "_BuildChannel").val()}).done(function(data){
                 if(data['result']['success']){
-                    $("#craftbukkit_BuildSelect").empty();
+                    $("#" + type + "BuildSelect").empty();
                     $.each(data['result']['results']['builds'], function(index, val){
-                        $("#craftbukkit_BuildSelect").append($("<option></option>").val(val).html(val))
-                    })
+                        $("#" + type + "_BuildSelect").append($("<option></option>").val(val).html(val))
+                    });
+                    $("#" + type + "_BuildVersion").text(data['result']['results']['latest_version'])
                 }
+                $("#refresh").removeClass("fa-spin");
             })
         }
 
@@ -175,6 +187,7 @@
 
         $("#serverPort,#serverAddress").change(function(){
             if($("#serverPort").val() != ''){ // Don't attempt to check on empty port field.
+                $("#refresh").addClass("fa-spin");
                 $.post('{{ reverse_url('Servers_Ajax_CheckAddress') }}', {'address': $("#serverAddress").val(), 'port': $("#serverPort").val()}).done(function(data){
                     if(data['result']['used']){
                         $("#criticalError").fadeIn();
@@ -185,17 +198,20 @@
                         $("#errorMessage").text(); // Reset error
                         $("#addressForm").removeClass().addClass("form-inline has-success")
                     }
+                    $("#refresh").removeClass("fa-spin");
                 })
             }
         });
 
         $("[id*=BuildChannel],[id*=BuildSelect]").change(function(event){
             console.log(event['currentTarget']['id']);
+            $("#refresh").addClass("fa-spin");
             if(event['currentTarget']['id'].split('_')[1] === 'BuildChannel'){
-                refresh_build_list()
+                refresh_build_list(server)
             } else if(event['currentTarget']['id'].split('_')[1] == 'BuildSelect'){
                 $.post('{{ reverse_url('Servers_Ajax_GetInfo') }}', {'server_type': server, 'request_type': 'get_build_info', 'build': $("#"+ event['currentTarget']['id']).val()}).done(function(data){
-                    $("#" + server + "_BuildVersion").text(data['result']['results']['info']['version'])
+                    $("#" + server + "_BuildVersion").text(data['result']['results']['info']['version']);
+                    $("#refresh").removeClass("fa-spin")
                 })
             }
         })
