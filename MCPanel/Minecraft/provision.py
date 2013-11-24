@@ -107,9 +107,11 @@ class Bukkit:
             self.ws.write_message({"success": False, "message": "HTTP Request was not successful. %s: %s" % (response.code, response.reason)})
 
     def get_streams(self, handler):
-        handler.finish({"values": [{"value": "rb", "name": "Recommended"},
-            {"value": "dev", "name": "Development"},
-            {"value": "beta", "name": "Beta"}]})
+        handler.finish({"result": {"results": {"values": [{"value": "rb", "name": "Recommended"},
+                                                          {"value": "dev", "name": "Development"},
+                                                          {"value": "beta", "name": "Beta"}]},
+                                   "success": True,
+                                   "message": None}})
 
     def get_builds(self, handler):
         self.handler = handler
@@ -132,9 +134,11 @@ class Bukkit:
 
     def get_build_info_http_handler(self, response):
         build_info = json.loads(response.body)
-        self.handler.finish({"info": {"build_number": build_info['build_number'],
+        self.handler.finish({"result": {"results": {"info": {"build_number": build_info['build_number'],
                                           "created": build_info['created'],
                                           "version": build_info['version'],
                                          "md5": build_info['file']['checksum_md5'],
                                           "size": build_info['file']['size'],
-                                          "name": build_info['channel']['name']}})
+                                          "name": build_info['channel']['name']}},
+                             "success": True,
+                             "message": None}})
