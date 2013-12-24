@@ -17,7 +17,7 @@ class Supervisor:
             return False
 
     def run_command(self, server_id, command):
-        return self.server.supervisor.sendProcessStdin(server_id, command)
+        return self.server.supervisor.sendProcessStdin(server_id, command + '\r\n')
 
     def get_pid(self, server_id):
         return self.server.supervisor.getProcessInfo(server_id)['pid']
@@ -45,5 +45,5 @@ class Supervisor:
         config.set(section_name, 'stderr_logfile', '/var/log/minecraft/%s.log' % process_name)
         with open(filename, 'w') as f:
             config.write(f)
-        self.server.supervisor.reloadConfig() # undocumented feature :(
+        self.server.supervisor.reloadConfig()  # undocumented feature :(
         self.server.supervisor.addProcessGroup(process_name) # also undocumented quirk which will auto start the server!

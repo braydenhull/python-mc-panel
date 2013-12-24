@@ -9,7 +9,6 @@ class DeleteUserHandler(BaseAdminAjaxHandler):
     @asynchronous
     @authenticated
     def post(self):
-        self.if_admin()
         if 'user' in self.request.arguments:
             try:
                 self.application.db.deleteUser(self.get_argument('user'))

@@ -116,6 +116,9 @@ class Database():
     def getServers(self):
         return self.Servers.select()
 
+    def getServer(self, server_id):
+        return self.Servers.select().where(self.Servers.ID == server_id).get()
+
     def serverExists(self, server_id):
         try:
             self.Servers.select().where(self.Servers.ID == server_id).get()
@@ -172,6 +175,9 @@ class Database():
 
     def deleteUser(self, user):
         (self.Users.get(self.Users.Username == user)).delete_instance()
+
+    def deleteServer(self, server_id):
+        (self.Servers.get(self.Servers.ID == server_id)).delete_instance()
 
     def editUser(self, username, password=None, api_key=None, session=None, is_admin=None):
         user = self.Users()

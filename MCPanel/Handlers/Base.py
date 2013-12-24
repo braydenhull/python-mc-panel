@@ -4,6 +4,7 @@ import tornado.web
 import base64
 import tornado.escape
 from peewee import DoesNotExist
+from tornado.web import HTTPError
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -29,3 +30,18 @@ class BaseHandler(tornado.web.RequestHandler):
             'servers': self.application.db.getServers(),
         })
         return ns
+
+    def if_admin(self):
+        try:
+            if not self.application.db.isUserAdmin(self.current_user):
+                raise HTTPError(403)
+        except DoesNotExist as e:
+            raise HTTPError(403)
+
+    def can_view_server(self, server_id):
+        try:
+            if not self.application.db.isUserAdmin(self.current_user):
+                if not self.application.db.getServer(server_id).Owner == self.current_user:
+                    raise HTTPError(403)
+        except DoesNotExist:
+            raise HTTPError(403)

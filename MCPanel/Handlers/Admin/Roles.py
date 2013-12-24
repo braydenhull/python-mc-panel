@@ -8,5 +8,4 @@ class AdminRoles(BaseAdminHandler):
     @asynchronous
     @authenticated
     def get(self):
-        self.if_admin()
         self.render(self.application.settings['template_path'] + '/admin/roles.template', pageName="Role Management")

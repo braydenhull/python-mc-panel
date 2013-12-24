@@ -1,9 +1,9 @@
 __author__ = 'brayden'
 
-from ..Base import BaseServersHandler
+from ..Base import BaseServerHandler
 
 
-class BaseServersAjaxHandler(BaseServersHandler):
+class BaseServerAjaxHandler(BaseServerHandler):
     def write_error(self, status_code, **kwargs):
         if status_code == 403:
             self.finish({'result': {'success': False, 'message': 'Forbidden request.'}})

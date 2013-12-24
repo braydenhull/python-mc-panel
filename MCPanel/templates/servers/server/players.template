@@ -12,27 +12,199 @@
 <div class="container" style="padding-top: 25px;">
     {% include "includes/server-pills.template" %}
     <div class="col-md-10">
-        <table class="table table-bordered">
-            <thead>
-            <tr>
-                <th>Player</th>
-                <th>Action</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td>Test</td>
-                <td>bleeh</td>
-            </tr>
-            </tbody>
-        </table>
+
+        <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
+            <li class="active"><a href="#currentPlayers" data-toggle="tab"> Current Players</a></li>
+            <li><a href="#bannedPlayers" data-toggle="tab"> Banned Players</a></li>
+            <li><a href="#operators" data-toggle="tab"> Operators</a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="currentPlayers">
+                <form class="form-inline" style="padding-bottom: 5px; padding-top: 5px;">
+                    <button id="refreshStatus" class="btn btn-primary" type="button">Refresh</button>
+                    <label>
+                        <input type="checkbox" checked="" id="autoRefreshStatus">
+                        Auto Refresh
+                    </label>
+                </form>
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="statusTable">
+                    </tbody>
+                </table>
+                <p id="statusText"></p>
+            </div>
+
+            <div class="tab-pane" id="bannedPlayers">
+                <div style="padding-top: 5px; padding-bottom: 5px;"><button id="refreshBanned" class="btn btn-primary" type="button">Refresh</button></div>
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Ban Date</th>
+                        <th>Banned By</th>
+                        <th>Banned Until</th>
+                        <th>Reason</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="bannedPlayersTable"></tbody>
+                </table>
+
+                <form class="form-inline" onsubmit="return false;">
+                    <label>
+                        Manual Ban
+                        <input id="playerName" class="form-control" type="text" placeholder="Player name" maxlength="16">
+                    </label>
+                    <button id="banPlayer" class="btn btn-danger" type="submit">Ban</button>
+                </form>
+            </div>
+
+            <div class="tab-pane" id="operators">
+                <div style="padding-top: 5px; padding-bottom: 5px;"><button id="refreshOperators" class="btn btn-primary" type="button">Refresh</button></div>
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="operatorsTable"></tbody>
+                </table>
+
+                <form class="form-inline" onsubmit="return false;">
+                    <label>
+                        Add Operator
+                        <input id="opPlayerName" class="form-control" type="text" placeholder="Player name" maxlength="16">
+                    </label>
+                    <button id="opPlayer" class="btn btn-success" type="submit">Add</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 <script src="../../../static/js/jquery-2.0.3.min.js"></script>
 <script src="../../../static/js/bootstrap.min.js"></script>
 <script>
     $(function(){
-        $("#server-id{{ server_id }}").addClass("active")
+
+        $("#tabs").tab();
+
+        var statusTable = $("#statusTable");
+        var bannedPlayersTable = $("#bannedPlayersTable");
+        var operatorsTable = $("#operatorsTable");
+
+        $("#server-id{{ server_id }}").addClass("active");
+        function refreshPlayers(){
+            $.post('{{ reverse_url("Server_Ajax_GetPlayers", server_id) }}').done(function(data){
+                $("#statusText").text("There are currently " + data['result']['current_players'] + " online of " + data['result']['max_players']);
+                $("#statusTable").empty();
+                $(data['result']['players']).each(function(index, name){
+                    $("#statusTable").append("<tr>" +
+                            "<td>" + name + "</td>" +
+                            "<td>" +
+                            "<div class=\"btn-group\">" +
+                                "<button username=\"" + name + "\" class=\"btn btn-warning btn-xs kick-player\" type=\"button\">Kick</button>" +
+                                "<button username=\"" + name + "\" class=\"btn btn-danger btn-xs ban-player\" type=\"button\">Ban</button>" +
+                            "</div>" +
+                            "</td></tr>"
+                    )
+                })
+            })
+        }
+
+        function refreshBannedPlayers(){
+            $.post('{{ reverse_url("Server_Ajax_GetBannedPlayers", server_id) }}').done(function(data){
+                bannedPlayersTable.empty();
+                $(data['result']['results']['players']).each(function(index, name){
+                    bannedPlayersTable.append('<tr>' +
+                            '<td>' + name + '</td>' +
+                            '<td>' + data['result']['results']['details'][name]['Ban Date'] + '</td>' +
+                            '<td>' + data['result']['results']['details'][name]['Banned By'] + '</td>' +
+                            '<td>' + data['result']['results']['details'][name]['Banned Until'] + '</td>' +
+                            '<td>' + data['result']['results']['details'][name]['Reason'] + '</td>' +
+                            '<td><button username="' + name + '" class="btn btn-success btn-xs unban-player" type="button">Unban</button></td>' +
+                            '</tr>')
+                })
+            })
+        }
+
+        function refreshOperators(){
+            $.post('{{ reverse_url("Server_Ajax_GetOperators", server_id) }}').done(function(data){
+                operatorsTable.empty();
+                $(data['result']['ops']).each(function(index, name){
+                    operatorsTable.append('<tr>' +
+                            '<td>' + name + '</td>' +
+                            '<td><button class="btn btn-xs btn-danger deop-player" type="button" username="' + name + '">De-op</button></td>' +
+                            '</tr>')
+                })
+            })
+        }
+
+        statusTable.on('click', '.kick-player', function(){
+            var player = $(this).attr('username');
+            $.post('{{ reverse_url('Server_Ajax_KickPlayer', server_id) }}', {"player": player})
+        });
+
+        statusTable.on('click', '.ban-player', function(){
+            var player = $(this).attr('username');
+            $.post('{{ reverse_url('Server_Ajax_BanPlayer', server_id) }}', {"player": player})
+        });
+
+        bannedPlayersTable.on('click', '.unban-player', function(){
+            $.post('{{ reverse_url('Server_Ajax_UnbanPlayer', server_id) }}', {"player": $(this).attr('username')}).done(function(data){
+                setTimeout(refreshBannedPlayers, 50)
+            })
+        });
+
+        operatorsTable.on('click', '.deop-player', function(){
+            $.post('{{ reverse_url('Server_Ajax_DeopPlayer', server_id) }}', {"player": $(this).attr('username')}).done(function(data){
+                setTimeout(refreshOperators, 50)
+            });
+        });
+
+        function autoRefreshPlayers(){
+            if($("#autoRefreshStatus").prop("checked")){
+                refreshPlayers();
+            }
+        }
+
+        $("#refreshStatus").click(function(){
+            refreshPlayers()
+        });
+
+        $("#refreshBanned").click(function(){
+            refreshBannedPlayers();
+        });
+
+        $("#refreshOperators").click(function(){
+            refreshOperators();
+        });
+
+        $("#banPlayer").click(function(){
+            $.post('{{ reverse_url("Server_Ajax_BanPlayer", server_id) }}', {"player": $("#playerName").val()}).done(function(data){
+                setTimeout(refreshBannedPlayers, 50);
+                $("#playerName").val("")
+            })
+        });
+
+        $("#opPlayer").click(function(){
+            $.post('{{ reverse_url('Server_Ajax_OpPlayer', server_id) }}', {"player": $("#opPlayerName").val()}).done(function(data){
+                setTimeout(refreshOperators, 50);
+                $("#opPlayerName").val("")
+            })
+        });
+
+        setInterval(autoRefreshPlayers, 5000); // Minecraft caches for 5 seconds so may as well set that as timeout
+
+        refreshPlayers();
+        refreshOperators();
+        refreshBannedPlayers()
     })
 </script>
 {% include "includes/footer.template" %}

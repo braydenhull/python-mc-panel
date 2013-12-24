@@ -14,7 +14,8 @@ class CreateServerHandler(BaseWebSocketHandler):
 
     def on_message(self, message):
         try:
-            message = json.loads(message)  # looks like {"params": {"memory": 512, "address": "192.168.2.3", "port": 25565, "type": "craftbukkit", "build": "latest", "stream": "rb"}, "authentication": "<cookie value>", "owner": "<owner, str>"}
+            message = json.loads(message)
+            # looks like {"params": {"memory": 512, "address": "192.168.2.3", "port": 25565, "type": "craftbukkit", "build": "latest", "stream": "rb"}, "authentication": "<cookie value>", "owner": "<owner, str>"}
             session = tornado.escape.url_unescape(message['authentication'])
             auth = False
             username = None
@@ -26,13 +27,13 @@ class CreateServerHandler(BaseWebSocketHandler):
                         if self.application.db.isUserAdmin(username):
                             auth = True  # so much nesting!
                         else:
-                            self.write_message({"success": False, "message": "Required permissions not present."})
+                            self.write_message({"success": False, "message": "Required permissions not present.", "complete": False})
                     else:
-                        self.write_message({"success": False, "message": "Bad authentication."})
+                        self.write_message({"success": False, "message": "Bad authentication.", "complete": False})
                 except DoesNotExist:
-                    self.write_message({'success': False, "message": "Bad authentication."})
+                    self.write_message({'success': False, "message": "Bad authentication.", "complete": False})
             else:
-                self.write_message({'success': False, "message": "Bad authentication"})
+                self.write_message({'success': False, "message": "Bad authentication", "complete": False})
 
             if auth:
                 memory = message['params']['memory']
@@ -42,16 +43,16 @@ class CreateServerHandler(BaseWebSocketHandler):
                 owner = message['owner']
                 if not self.application.db.isAddressTaken(address, port):
                     self.application.db.addServer(address, port, memory, owner, server_type=server_type)
-                    self.write_message({"success": True, "message": "Added server to database."})
+                    self.write_message({"success": True, "message": "Added server to database.", "complete": False})
                     server_id = self.application.db.getServerID(address, port)
                     self.server_id = server_id
-                    self.write_message({"success": True, "message": "Verified database entry, got ID %s" % server_id})
+                    self.write_message({"success": True, "message": "Verified database entry, got ID %s" % server_id, "complete": False})
                     if server_type == "craftbukkit":
-                        self.write_message({"message": "entered bukkit", "success": True})
+                        self.write_message({"message": "entered bukkit", "success": True, "complete": False})
                         Bukkit().install(self, **message['params'])
                     else:
-                            self.write_message({"success": False, "message": "Type not implemented."})
+                            self.write_message({"success": False, "message": "Type not implemented.", "complete": False})
                 else:
-                    self.write_message({"success": False, "message": "IP/Port combination already taken."})
+                    self.write_message({"success": False, "message": "IP/Port combination already taken.", "complete": False})
         except ValueError or KeyError:
-            self.write_message({"success": False, "message": "Not well formatted message."})
+            self.write_message({"success": False, "message": "Not well formatted message.", "complete": False})

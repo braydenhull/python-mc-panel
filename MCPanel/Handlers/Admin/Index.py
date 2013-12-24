@@ -11,5 +11,4 @@ class AdminIndex(BaseAdminHandler):
     @authenticated
     @addslash
     def get(self):
-        self.if_admin()
         self.render(self.application.settings['template_path'] + '/admin/index.template')

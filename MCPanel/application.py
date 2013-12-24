@@ -1,6 +1,5 @@
 __author__ = 'brayden'
 
-import tornado.web
 import tornado
 import os
 import hashlib
@@ -26,6 +25,19 @@ from Handlers.Servers.Server.Players import ServerPlayersHandler
 from Handlers.Servers.WebSocket.CreateServer import CreateServerHandler
 from Handlers.Servers.Ajax.CheckAddress import CheckAddressHandler
 from Handlers.Servers.Ajax.GetInfo import GetInfoHandler
+from Handlers.Servers.Server.Console import ServerConsoleHandler
+from Handlers.Servers.Server.Ajax.GetLog import GetLogHandler
+from Handlers.Servers.Server.Ajax.SendCommand import SendCommandHandler
+from Handlers.Servers.Server.Properties import ServerPropertiesHandler
+from Handlers.Servers.Ajax.DeleteServer import DeleteServerHandler
+from Handlers.Servers.Server.Ajax.GetPlayers import GetPlayersHandler
+from Handlers.Servers.Server.Ajax.KickPlayer import KickPlayerHandler
+from Handlers.Servers.Server.Ajax.BanPlayer import BanPlayerHandler
+from Handlers.Servers.Server.Ajax.GetBannedPlayers import GetBannedPlayersHandler
+from Handlers.Servers.Server.Ajax.UnbanPlayer import UnbanPlayerHandler
+from Handlers.Servers.Server.Ajax.GetOperators import GetOperatorsHandler
+from Handlers.Servers.Server.Ajax.OpPlayer import OpPlayerHandler
+from Handlers.Servers.Server.Ajax.DeopPlayer import DeopPlayerHandler
 
 
 class Application(tornado.web.Application):
@@ -41,6 +53,7 @@ class Application(tornado.web.Application):
         self.supervisor_auth = {'Username': '', 'Password': ''}
         self.parse_supervisor_config()
         self.process_prefix = "minecraft_"
+        self.craftbukkit_build_list = {}
         self.supervisor = Supervisor(self.supervisor_auth['Username'], self.supervisor_auth['Password'])
         handlers = [
             ('Home', r'/', IndexHandler),
@@ -60,6 +73,19 @@ class Application(tornado.web.Application):
             ('Servers_WebSocket_CreateServer', r'/servers/websocket/createserver', CreateServerHandler),
             ('Servers_Ajax_CheckAddress', r'/servers/ajax/checkAddress', CheckAddressHandler),
             ('Servers_Ajax_GetInfo', r'/servers/ajax/getInfo', GetInfoHandler),
+            ('Server_Console', r'/servers/(\d+)/console', ServerConsoleHandler),
+            ('Server_Ajax_GetLog', r'/servers/(\d+)/ajax/getLog', GetLogHandler),
+            ('Server_Ajax_SendCommand', r'/servers/(\d+)/ajax/sendCommand', SendCommandHandler),
+            ('Server_Properties', r'/servers/(\d+)/properties', ServerPropertiesHandler),
+            ('Servers_DeleteServer', r'/servers/deleteServer', DeleteServerHandler),
+            ('Server_Ajax_GetPlayers', r'/servers/(\d+)/ajax/getPlayers', GetPlayersHandler),
+            ('Server_Ajax_KickPlayer', r'/servers/(\d+)/ajax/kickPlayer', KickPlayerHandler),
+            ('Server_Ajax_BanPlayer', r'/servers/(\d+)/ajax/banPlayer', BanPlayerHandler),
+            ('Server_Ajax_GetBannedPlayers', r'/servers/(\d+)/ajax/getBannedPlayers', GetBannedPlayersHandler),
+            ('Server_Ajax_UnbanPlayer', r'/servers/(\d+)/ajax/unbanPlayer',  UnbanPlayerHandler),
+            ('Server_Ajax_GetOperators', r'/servers/(\d+)/ajax/getOperators', GetOperatorsHandler),
+            ('Server_Ajax_OpPlayer', r'/servers/(\d+)/ajax/opPlayer', OpPlayerHandler),
+            ('Server_Ajax_DeopPlayer', r'/servers/(\d+)/ajax/deopPlayer', DeopPlayerHandler),
         ]
         handlers = [URLSpec(pattern, handler, name=name) for name, pattern, handler in handlers]
         settings = dict(

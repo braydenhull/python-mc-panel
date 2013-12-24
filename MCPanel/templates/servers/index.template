@@ -16,7 +16,7 @@
 <div class="container">
     <div class="col-md-12">
         <h3>Server list</h3>
-        <table class="table table-bordered">
+        <table id="serversTable" class="table table-bordered">
             <thead>
             <tr>
                 <th style="width: 15px;">ID</th>
@@ -36,12 +36,12 @@
                     <td>{{ server.Owner }}</td>
                     <td>
                         <div class="btn-group">
-                            <a href="{{ reverse_url("Server_Index", server.ID) }}" class="btn btn-sm btn-primary"><i class="icon-edit"></i></a>
+                            <a href="{{ reverse_url("Server_Index", server.ID) }}" class="btn btn-sm btn-primary"><i class="fa fa-edit"></i></a>
                             {% if handler.application.usernames[current_user]['Is_Admin'] %}
-                            <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-danger"><i class="icon-trash"></i></button>
+                                <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-danger delete-button"><i class="fa fa-trash-o"></i></button>
                             {% end %}
-                            <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-warning"><i class="icon-stop"></i></button>
-                            <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-success" id="startServer"><i class="icon-play"></i></button>
+                            <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-warning"><i class="fa fa-stop"></i></button>
+                            <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-success" id="startServer"><i class="fa fa-play"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -75,14 +75,18 @@
                                 Server Owner
                                 <select id="serverOwner" class="form-control">
                                     {% for user in handler.application.db.getUsers() %}
-                                    <option>{{ user.Username }}</option>
+                                        {% if user.Username == current_user %}
+                                        <option selected="">{{ user.Username }}</option>
+                                        {% else %}
+                                        <option>{{ user.Username }}</option>
+                                        {% end %}
                                     {% end %}
                                 </select>
                             </label>
                             <br><br>
                             <div style="display: inline;">
                                 <label for="currentMem">Current (max {{ psutil.virtual_memory().total / 1024 / 1024 }}MB): </label>
-                                <span id="currentMem">512MB</span>
+                                <span id="currentMem">1024MB</span>
                             </div>
 
                             <div id="memorySlider"></div>
@@ -126,7 +130,60 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-success">Create</button>
+                            <button id="modalCreateServer" type="button" class="btn btn-success">Create</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div>
+            <div class="modal fade" id="createServerProgressModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title">Provisioning Server</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="progress progress-striped active" id="progressBar">
+                                <div id="progressBarStatus" class="progress-bar" role="progressbar" style="width: 100%">Test</div>
+                            </div>
+                            <textarea id="provisioningLog" class="form-control" readonly="" rows="4"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="createServerShowLog" class="btn btn-primary">Show Log</button>
+                            <button id="createServerProgressClose" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="modal fade" id="deleteServerModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title text-danger" id="deleteServerModalTitle">Delete Server</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p id="deleteServerModalMessage" class="text-danger"></p>
+                            <p>This will: </p>
+                            <ul>
+                                <li>Remove all world data;</li>
+                                <li>Remove the Linux user associated with this server;</li>
+                                <li>Remove all configuration associated with the server; and</li>
+                                <li>Remove all references from the database</li>
+                            </ul>
+                            <p>Please ensure all data is backed up before proceeding.</p>
+                            <input type="hidden" id="deleteServerModalServerID">
+                        </div>
+                        <div class="modal-footer">
+                            <button id="deleteServerModalClose" class="btn btn-default" data-dismiss="modal" type="button">Close</button>
+                            <button id="deleteServerModalConfirm" class="btn btn-danger" type="button">Delete Server</button>
                         </div>
                     </div>
                 </div>
@@ -138,9 +195,26 @@
 <script src="../../static/js/jquery-2.0.3.min.js"></script>
 <script src="../../static/js/jquery-ui.min.js"></script>
 <script src="../../static/js/bootstrap.min.js"></script>
+<script src="../../static/js/jquery.cookie.js"></script>
 <script>
     $(function(){
-        var server;
+
+        $("#serversTable").on('click', '.delete-button', function(){
+            server_id = $(this).attr('server-id');
+            $("#deleteServerModalTitle").text("Delete Server " + server_id);
+            $("#deleteServerModalServerID").val(server_id);
+            $("#deleteServerModal").modal("show");
+        });
+
+        $("#deleteServerModalConfirm").click(function(){
+            $.post('{{ reverse_url('Servers_DeleteServer') }}', {'server_id': $("#deleteServerModalServerID").val()}).done(function(data){
+                $("#deleteServerModal").modal("hide");
+                location.reload()
+            })
+        });
+
+        var server = null;
+        var ws_socket = new WebSocket("ws://" + document.domain + "{{ reverse_url("Servers_WebSocket_CreateServer") }}");
         $("[id^=craftbukkit]").each(function(index){
             console.log(index);
         });
@@ -164,7 +238,7 @@
         function refresh_build_list(type){
             $.post('{{ reverse_url('Servers_Ajax_GetInfo') }}', {'server_type': type, 'request_type': 'get_builds', 'stream': $("#" + type + "_BuildChannel").val()}).done(function(data){
                 if(data['result']['success']){
-                    $("#" + type + "BuildSelect").empty();
+                    $("#" + type + "_BuildSelect").empty();
                     $.each(data['result']['results']['builds'], function(index, val){
                         $("#" + type + "_BuildSelect").append($("<option></option>").val(val).html(val))
                     });
@@ -193,6 +267,10 @@
                         $("#criticalError").fadeIn();
                         $("#errorMessage").text("IP address and port combination is in use already.");
                         $("#addressForm").removeClass().addClass("form-inline has-error")
+                    } else if(!data['result']['success']) {
+                        $("#criticalError").fadeIn();
+                        $("#errorMessage").text(data['result']['message']);
+                        $("#addressForm").removeClass().addClass("form-inline has-error")
                     } else {
                         $("#criticalError").fadeOut();
                         $("#errorMessage").text(); // Reset error
@@ -214,6 +292,54 @@
                     $("#refresh").removeClass("fa-spin")
                 })
             }
+        });
+
+        $("#modalCreateServer").click(function(){
+            if(server == null){
+                $("#criticalError").fadeIn();
+                $("#errorMessage").text("Please select a server type.");
+                $("#serverSelection").addClass("has-error")
+            } else {
+                $("#createServerModal").modal('hide');
+
+                ws_socket.onmessage = function(event){
+                    console.log(event.data);
+                    $("#provisioningLog").append(event.data + '\r\n');
+                    $("#progressBarStatus").text(JSON.parse(event.data)['message']);
+                    if(JSON.parse(event.data)['complete']){
+                        $("#progressBarStatus").addClass("progress-bar-success");
+                        $("#progressBar").removeClass("active");
+                        setTimeout(function(){
+                            location.reload()
+                        }, 500)
+                    } else if(!JSON.parse(event.data)['success']){
+                        $("#progressBar").removeClass("active");
+                        $("#progressBarStatus").addClass("progress-bar-danger");
+                    }
+                };
+
+                ws_socket.send(JSON.stringify({
+                    'params': {
+                        'memory': $("#memorySlider").slider("value"),
+                        'address': $("#serverAddress").val(),
+                        'port': $("#serverPort").val(),
+                        'build': $("#" + server + "_BuildSelect").val(),
+                        'stream': $("#" + server + "_BuildChannel").val(),
+                        'type': server
+                    },
+                    'authentication': $.cookie("session"),
+                    'owner': $("#serverOwner").val()
+                }));
+
+                $("#createServerProgressModal").modal("show");
+                $("#provisioningLog").hide();
+                $("#createServerProgressClose").hide();
+            }
+
+        });
+
+        $("#createServerShowLog").click(function(){
+            $("#provisioningLog").show();
         })
     })
 </script>
