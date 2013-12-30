@@ -148,7 +148,7 @@
                         </div>
                         <div class="modal-body">
                             <div class="progress progress-striped active" id="progressBar">
-                                <div id="progressBarStatus" class="progress-bar" role="progressbar" style="width: 100%">Test</div>
+                                <div id="progressBarStatus" class="progress-bar" role="progressbar" style="width: 100%"></div>
                             </div>
                             <textarea id="provisioningLog" class="form-control" readonly="" rows="4"></textarea>
                         </div>

@@ -20,7 +20,7 @@ class CreateServerHandler(BaseWebSocketHandler):
             auth = False
             username = None
             if len(session.split('|')) == 2:
-                username = (base64.decodestring(session.split('|')[0])).strip()
+                username = (((session.split('|')[0])).decode('hex').decode('utf-8')).strip()
                 hash = session.split('|')[1]
                 try:
                     if self.application.check_session(username, hash):

@@ -12,7 +12,7 @@ class BaseHandler(tornado.web.RequestHandler):
         if 'session' in self.request.cookies:
             cookie = tornado.escape.url_unescape(self.get_cookie('session'))
             if len(cookie.split('|')) == 2:
-                username = (base64.decodestring(cookie.split('|')[0])).strip()
+                username = (((cookie.split('|')[0])).decode('hex').decode('utf-8')).strip()
                 session = cookie.split('|')[1]
                 try:
                     if self.application.check_session(username, session):
