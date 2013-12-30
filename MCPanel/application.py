@@ -38,6 +38,8 @@ from Handlers.Servers.Server.Ajax.UnbanPlayer import UnbanPlayerHandler
 from Handlers.Servers.Server.Ajax.GetOperators import GetOperatorsHandler
 from Handlers.Servers.Server.Ajax.OpPlayer import OpPlayerHandler
 from Handlers.Servers.Server.Ajax.DeopPlayer import DeopPlayerHandler
+from Handlers.User.Index import UserIndexHandler
+from Handlers.Servers.Ajax.StartServer import StartServerHandler
 
 
 class Application(tornado.web.Application):
@@ -86,6 +88,8 @@ class Application(tornado.web.Application):
             ('Server_Ajax_GetOperators', r'/servers/(\d+)/ajax/getOperators', GetOperatorsHandler),
             ('Server_Ajax_OpPlayer', r'/servers/(\d+)/ajax/opPlayer', OpPlayerHandler),
             ('Server_Ajax_DeopPlayer', r'/servers/(\d+)/ajax/deopPlayer', DeopPlayerHandler),
+            ('User_Index', r'/user/?', UserIndexHandler),
+            ('Servers_Ajax_StartServer', r'/servers/ajax/startServer', StartServerHandler),
         ]
         handlers = [URLSpec(pattern, handler, name=name) for name, pattern, handler in handlers]
         settings = dict(

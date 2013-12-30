@@ -14,7 +14,7 @@
     {% include "includes/server-pills.template" %}
     <div class="col-md-10">
         <form class="form-inline">
-            <label>Lines<input class="form-control" type="number" placeholder="Lines" id="lineNum" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" value="100"></label>
+            <label>Lines<input class="form-control" type="number" placeholder="Lines" id="lineNum" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" value="100"></label> <!-- Stackoverflow saves the day -->
             <button type="button" class="btn btn-primary" id="refreshLog">Refresh</button>
             <label><input checked="" type="checkbox" id="autoRefresh"> Auto Refresh</label>
         </form>
@@ -62,7 +62,7 @@
             refreshLog(true)
         });
 
-        setInterval(refreshLog, 2000);
+        setInterval(refreshLog, 1000);
 
         $("#server-id{{ server_id }}").addClass("active");
     })

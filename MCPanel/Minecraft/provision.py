@@ -105,8 +105,14 @@ class Bukkit:
                 with open(home + '/minecraft.jar', 'wb') as f:
                     f.write(response.body)
 
+                with open(home + '/server.properties', 'w') as f:
+                    f.write("enable-query=true")  # enable the query API to get player listings
+
                 os.chown(home + '/minecraft.jar', pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_uid, pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_gid)
                 os.chmod(home + '/minecraft.jar', 0700)
+
+                os.chown(home + '/server.properties', pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_uid, pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_gid)
+                os.chmod(home + '/server.properties', 0600)
 
                 self.ws.application.supervisor.write_program_config(self.ws.application.process_prefix + str(self.ws.server_id), os.path.dirname(self.ws.application.supervisor_config_path), self.args['memory'], self.ws.application.process_prefix + str(self.ws.server_id), home + '/minecraft.jar', additional_jar_options="--nojline --server-ip %s --server-port %s" % (self.args['address'], self.args['port']))
                 self.ws.write_message({"success": True, "message": "Created supervisor config", "complete": False})
@@ -170,6 +176,12 @@ class Bukkit:
             application.supervisor.server.supervisor.clearProcessLogs(application.process_prefix + server_id)
         except Exception as e:
             print "Failed to remove process logs for server %s. Error: %s" % (server_id, e)
+
+        try:
+            with open('/var/log/minecraft/%s%s.log' % (application.process_prefix, server_id), 'w') as f:
+                f.write('')  # clear log
+        except IOError as e:
+            print "Failed to blank out log for server %s. Error %s" % (server_id, e)
 
         try:
             application.supervisor.server.supervisor.removeProcessGroup(application.process_prefix + server_id)

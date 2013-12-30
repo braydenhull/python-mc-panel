@@ -22,8 +22,8 @@ class Supervisor:
     def get_pid(self, server_id):
         return self.server.supervisor.getProcessInfo(server_id)['pid']
 
-    def start_process(self, server_id):
-        return self.server.supervisor.startProcess(server_id)
+    def start_process(self, process_name):
+        return self.server.supervisor.startProcess(process_name)
 
     def write_program_config(self, process_name, directory, memory, username, jar_file_location, additional_options='', additional_jar_options=''):
         config = ConfigParser.RawConfigParser()

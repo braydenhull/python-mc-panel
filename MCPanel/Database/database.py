@@ -13,6 +13,7 @@ class Database():
 
     def __init__(self):
         self.config = config()
+        self.rounds = 20000
         if self.config.get('database', 'type') == 'sqlite':
             self.database = SqliteDatabase(self.config.get('database', 'host'))
             self.database.connect()
@@ -107,7 +108,7 @@ class Database():
         self.User_Roles.create_table(True)
 
     def addUser(self, username, password, is_admin=False):
-        password = passlib.hash.sha1_crypt.encrypt(password, rounds=20000)
+        password = passlib.hash.sha1_crypt.encrypt(password, rounds=self.rounds)
         self.Users.create(Username=escape.xhtml_escape(username), Password=password, Is_Admin=is_admin, force_insert=True)
 
     def addServer(self, address, port, memory, owner, server_type="craftbukkit"):
@@ -183,7 +184,7 @@ class Database():
         user = self.Users()
         user.Username = username
         if type(password) is unicode:
-            user.Password = passlib.hash.sha1_crypt.encrypt(password, rounds=20000)
+            user.Password = passlib.hash.sha1_crypt.encrypt(password, rounds=self.rounds)
         if type(api_key) is unicode:
             user.API_Key = api_key
         if type(session) is unicode:
@@ -192,3 +193,6 @@ class Database():
             user.Is_Admin = is_admin
 
         user.save()
+
+    def changePassword(self, username, new_password):
+        self.Users.update(Password=passlib.hash.sha1_crypt.encrypt(new_password, rounds=self.rounds)).where(self.Users.Username == username).execute()

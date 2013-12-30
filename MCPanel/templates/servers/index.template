@@ -41,7 +41,7 @@
                                 <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-danger delete-button"><i class="fa fa-trash-o"></i></button>
                             {% end %}
                             <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-warning"><i class="fa fa-stop"></i></button>
-                            <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-success" id="startServer"><i class="fa fa-play"></i></button>
+                            <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-success start-server-button" id="startServer"><i class="fa fa-play"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -189,7 +189,31 @@
                 </div>
             </div>
         </div>
+
         {% end %}
+
+        <div>
+            <div class="modal fade" id="startServerModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title text-success">Start Server</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-block alert-danger" id="startServerModalCriticalError">
+                                <h4>Critical Error</h4>
+                                <p id="startServerModalErrorMessage"></p>
+                            </div>
+                            <p class="text-success" id="successMessage"></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <script src="../../static/js/jquery-2.0.3.min.js"></script>
@@ -199,18 +223,40 @@
 <script>
     $(function(){
 
-        $("#serversTable").on('click', '.delete-button', function(){
+        var serversTable = $("#serversTable");
+
+        serversTable.on('click', '.delete-button', function(){
             server_id = $(this).attr('server-id');
             $("#deleteServerModalTitle").text("Delete Server " + server_id);
             $("#deleteServerModalServerID").val(server_id);
             $("#deleteServerModal").modal("show");
         });
 
-        $("#deleteServerModalConfirm").click(function(){
-            $.post('{{ reverse_url('Servers_DeleteServer') }}', {'server_id': $("#deleteServerModalServerID").val()}).done(function(data){
-                $("#deleteServerModal").modal("hide");
-                location.reload()
+        serversTable.on('click', '.start-server-button', function(){
+            server_id = $(this).attr('server-id');
+            $("#startServerModal").modal('show');
+            $.post('{{ reverse_url("Servers_Ajax_StartServer") }}', {"server_id": server_id}).done(function(data){
+                if(data['result']['success']){
+                    $("#successMessage").text("Successfully started the server.")
+                } else {
+                    $("#startServerModalCriticalError").fadeIn();
+                    $("#startServerModalErrorMessage").text(data['result']['message'])
+                }
             })
+        });
+
+        $("#deleteServerModalConfirm").removeAttr('disabled'); // for some reason it is disabled on page load in some circumstances
+
+        $("#deleteServerModalConfirm").click(function(){
+            console.log("test");
+            if(!$("#deleteServerModalConfirm").prop('disabled')){
+                $("#deleteServerModalConfirm").addClass('disabled').attr('disabled', '');
+                $.post('{{ reverse_url('Servers_DeleteServer') }}', {'server_id': $("#deleteServerModalServerID").val()}).done(function(data){
+                    $("#deleteServerModal").modal("hide");
+                    location.reload()
+                })
+            }
+
         });
 
         var server = null;
@@ -220,6 +266,7 @@
         });
         $("#criticalError").hide();
         $("#craftbukkit_Form").hide();
+        $("#startServerModalCriticalError").hide();
         $("#serverSelection").change(function(event){
             server = event.currentTarget.value;
             if(server === "craftbukkit"){

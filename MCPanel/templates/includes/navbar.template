@@ -26,7 +26,7 @@
                 {% end %}
             </ul>
             <ul class="nav navbar-nav pull-right">
-                <li><a class="navbar-brand" href="#"><i class="fa fa-user"></i> {{ current_user }}</a></li>
+                <li id="{{ handler.application.named_handlers['User_Index'].handler_class.__name__ }}"><a class="navbar-brand" href="{{ reverse_url('User_Index') }}"><i class="fa fa-user"></i> {{ current_user }}</a></li>
                 {% if not current_user == "Not Logged In" %}
                 {% if handler.application.usernames[current_user]['Is_Admin'] %}
                     <li class="dropdown">

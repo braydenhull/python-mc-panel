@@ -109,7 +109,7 @@
     $(function(){
         var users = {
         {% for user in users %}
-            {{ user.Username }}: {'Is_Admin': '{{ user.Is_Admin }}'},
+            "{{ user.Username }}": {'Is_Admin': '{{ user.Is_Admin }}'},
         {% end %}
         };
 
