@@ -85,40 +85,63 @@ class Bukkit:
         self.channel = self.args['stream']
         self.build = int(self.args['build'])
 
-        self.ws.write_message({"success": True, "message": "Grabbing Bukkit (this might take a while)", "complete": False})
-        try:
-            client.fetch(self.get_download_url()['URL'], self._cb_download_handler, user_agent=self.user_agent, request_timeout=99999)  # if request_timeout isn't used, it'll die if it can't download fast enough
-        except self.BukkitProvisionError as e:
-            self.ws.write_message({"message": "Encountered an error. %s: %s" % (e.name, e.message), "success": False, "complete": False})
+        self.home = self.ws.application.config.get('minecraft', 'home')
+        if os.path.exists(self.home):
+            os.system("useradd -m -s /bin/false -d %s/%s%s/ %s%s" % (self.home, self.ws.application.process_prefix, self.ws.server_id, self.ws.application.process_prefix, self.ws.server_id))
+            self.ws.write_message({"success": True, "message": "Created new Linux user for server %s" % self.ws.server_id, "complete": False})
+            self.home = pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_dir
+            if not os.path.exists(self.home):
+                os.mkdir(self.home)
+                os.chown(self.home, self.ws.application.process_prefix + str(self.ws.server_id), self.ws.application.process_prefix + str(self.ws.server_id))
+
+            with open(self.home + '/server.properties', 'w') as f:
+                f.write("enable-query=true")  # enable the query API to get player listings
+
+            os.chown(self.home + '/server.properties', pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_uid, pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_gid)
+            os.chmod(self.home + '/server.properties', 0600)
+
+            with open(os.path.dirname(self.ws.application.config.config_file) + '/bukkit_jar_cache/versions.json', 'r') as f:
+                self.versions = json.load(f)
+
+            if str(self.build) in self.versions['builds']:
+                shutil.copyfile(self.versions['builds'][str(self.build)]['file'], self.home + '/minecraft.jar')
+                self._finish_install()
+            else:
+                try:
+                    self.ws.write_message({"message": "Starting Bukkit download.", "success": True, "complete": False})
+                    client.fetch(self.get_download_url()['URL'], self._cb_download_handler, user_agent=self.user_agent, request_timeout=99999)  # if request_timeout isn't used, it'll die if it can't download fast enough
+                except self.BukkitProvisionError as e:
+                    self.ws.write_message({"message": "Encountered an error. %s: %s" % (e.name, e.message), "success": False, "complete": False})
+        else:
+            self.ws.write_message({"message": "Home directory is not present.", "success": False, "complete": False})
 
     def _cb_download_handler(self, response):
         if not response.error:
             self.ws.write_message({"message": "Completed download.", "success": True, "complete": False})
-            home = self.ws.application.config.get('minecraft', 'home')
-            if os.path.exists(home):
-                os.system("useradd -m -s /bin/false -d %s/%s%s/ %s%s" % (home, self.ws.application.process_prefix, self.ws.server_id, self.ws.application.process_prefix, self.ws.server_id))
-                self.ws.write_message({"success": True, "message": "Created new Linux user for server %s" % self.ws.server_id, "complete": False})
-                home = pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_dir
-                if not os.path.exists(home):
-                    os.mkdir(home)
-                    os.chown(home, self.ws.application.process_prefix + str(self.ws.server_id), self.ws.application.process_prefix + str(self.ws.server_id))
-                with open(home + '/minecraft.jar', 'wb') as f:
+
+            with open(self.home + '/minecraft.jar', 'wb') as f:
+                f.write(response.body)
+
+            with open(os.path.dirname(self.ws.application.config.config_file) + '/bukkit_jar_cache/%s.jar' % self.build, 'wb') as f:
                     f.write(response.body)
 
-                with open(home + '/server.properties', 'w') as f:
-                    f.write("enable-query=true")  # enable the query API to get player listings
+            with open(os.path.dirname(self.ws.application.config.config_file) + '/bukkit_jar_cache/versions.json', 'w') as f:
+                self.versions['builds'][str(self.build)] = {'file': os.path.dirname(self.ws.application.config.config_file) + '/bukkit_jar_cache/%s.jar' % str(self.build)}
+                json.dump(self.versions, f)
 
-                os.chown(home + '/minecraft.jar', pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_uid, pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_gid)
-                os.chmod(home + '/minecraft.jar', 0700)
 
-                os.chown(home + '/server.properties', pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_uid, pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_gid)
-                os.chmod(home + '/server.properties', 0600)
-
-                self.ws.application.supervisor.write_program_config(self.ws.application.process_prefix + str(self.ws.server_id), os.path.dirname(self.ws.application.supervisor_config_path), self.args['memory'], self.ws.application.process_prefix + str(self.ws.server_id), home + '/minecraft.jar', additional_jar_options="--nojline --server-ip %s --server-port %s" % (self.args['address'], self.args['port']))
-                self.ws.write_message({"success": True, "message": "Created supervisor config", "complete": False})
-                self.ws.write_message({"success": True, "message": "Starting server!", "complete": True})
+            self._finish_install()  # Jump back into the install process
         else:
-            self.ws.write_message({"success": False, "message": "HTTP Request was not successful. %s: %s" % (response.code, response.reason), "complete": False})
+            self.ws.write_message({"message": "Download failed. %s: %s" % (response.code, response.error), "success": False, "complete": False})
+
+
+
+    def _finish_install(self):
+        os.chown(self.home + '/minecraft.jar', pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_uid, pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_gid)
+        os.chmod(self.home + '/minecraft.jar', 0700)
+        self.ws.application.supervisor.write_program_config(self.ws.application.process_prefix + str(self.ws.server_id), os.path.dirname(self.ws.application.supervisor_config_path), self.args['memory'], self.ws.application.process_prefix + str(self.ws.server_id), self.home + '/minecraft.jar', additional_jar_options="--nojline --server-ip %s --server-port %s" % (self.args['address'], self.args['port']))
+        self.ws.write_message({"success": True, "message": "Created supervisor config", "complete": False})
+        self.ws.write_message({"success": True, "message": "Starting server!", "complete": True})
 
     def get_streams(self, handler):
         handler.finish({"result": {"results": {"values": [{"value": "rb", "name": "Recommended"},

@@ -5,6 +5,7 @@ import os
 import hashlib
 import Database.database
 import ConfigParser
+import json
 from tornado.web import URLSpec
 from Config import config
 from Minecraft.supervisor import Supervisor
@@ -57,6 +58,7 @@ class Application(tornado.web.Application):
         self.process_prefix = "minecraft_"
         self.craftbukkit_build_list = {}
         self.supervisor = Supervisor(self.supervisor_auth['Username'], self.supervisor_auth['Password'])
+        self.setup_bukkit_jar_cache()
         handlers = [
             ('Home', r'/', IndexHandler),
             ('Login', r'/login', LoginHandler),
@@ -141,3 +143,12 @@ class Application(tornado.web.Application):
         config.read(self.supervisor_config_path)
         self.supervisor_auth['Username'] = config.get('inet_http_server', 'username')
         self.supervisor_auth['Password'] = config.get('inet_http_server', 'password')
+
+    def setup_bukkit_jar_cache(self):
+        directory = os.path.dirname(self.config.config_file)
+        if not os.path.exists(directory + '/bukkit_jar_cache/'):
+            os.mkdir(directory + '/bukkit_jar_cache/')
+
+        if not os.path.exists(directory + '/bukkit_jar_cache/versions.json'):
+            with open(directory + '/bukkit_jar_cache/versions.json', 'w') as f:
+                json.dump({'builds': {}}, f)
