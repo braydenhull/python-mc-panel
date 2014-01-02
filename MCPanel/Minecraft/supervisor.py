@@ -25,6 +25,9 @@ class Supervisor:
     def start_process(self, process_name):
         return self.server.supervisor.startProcess(process_name)
 
+    def stop_process(self, process_name):
+        return self.server.supervisor.stopProcess(process_name)
+
     def write_program_config(self, process_name, directory, memory, username, jar_file_location, additional_options='', additional_jar_options=''):
         config = ConfigParser.RawConfigParser()
         filename = directory + '/conf.d/%s.conf' % process_name

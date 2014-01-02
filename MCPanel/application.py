@@ -41,6 +41,7 @@ from Handlers.Servers.Server.Ajax.OpPlayer import OpPlayerHandler
 from Handlers.Servers.Server.Ajax.DeopPlayer import DeopPlayerHandler
 from Handlers.User.Index import UserIndexHandler
 from Handlers.Servers.Ajax.StartServer import StartServerHandler
+from Handlers.Servers.Ajax.StopServer import StopServerHandler
 
 
 class Application(tornado.web.Application):
@@ -81,7 +82,7 @@ class Application(tornado.web.Application):
             ('Server_Ajax_GetLog', r'/servers/(\d+)/ajax/getLog', GetLogHandler),
             ('Server_Ajax_SendCommand', r'/servers/(\d+)/ajax/sendCommand', SendCommandHandler),
             ('Server_Properties', r'/servers/(\d+)/properties', ServerPropertiesHandler),
-            ('Servers_DeleteServer', r'/servers/deleteServer', DeleteServerHandler),
+            ('Servers_DeleteServer', r'/servers/ajax/deleteServer', DeleteServerHandler),
             ('Server_Ajax_GetPlayers', r'/servers/(\d+)/ajax/getPlayers', GetPlayersHandler),
             ('Server_Ajax_KickPlayer', r'/servers/(\d+)/ajax/kickPlayer', KickPlayerHandler),
             ('Server_Ajax_BanPlayer', r'/servers/(\d+)/ajax/banPlayer', BanPlayerHandler),
@@ -92,6 +93,7 @@ class Application(tornado.web.Application):
             ('Server_Ajax_DeopPlayer', r'/servers/(\d+)/ajax/deopPlayer', DeopPlayerHandler),
             ('User_Index', r'/user/?', UserIndexHandler),
             ('Servers_Ajax_StartServer', r'/servers/ajax/startServer', StartServerHandler),
+            ('Servers_Ajax_StopServer', r'/servers/ajax/stopServer', StopServerHandler),
         ]
         handlers = [URLSpec(pattern, handler, name=name) for name, pattern, handler in handlers]
         settings = dict(

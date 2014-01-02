@@ -40,7 +40,7 @@
                             {% if handler.application.usernames[current_user]['Is_Admin'] %}
                                 <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-danger delete-button"><i class="fa fa-trash-o"></i></button>
                             {% end %}
-                            <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-warning"><i class="fa fa-stop"></i></button>
+                            <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-warning stop-server-button"><i class="fa fa-stop"></i></button>
                             <button server-id="{{ server.ID }}" type="button" class="btn btn-sm btn-success start-server-button" id="startServer"><i class="fa fa-play"></i></button>
                         </div>
                     </td>
@@ -198,7 +198,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title text-success">Start Server</h4>
+                            <h4 class="modal-title text-success"><i class="fa fa-refresh" id="startServerModalRefresh"></i> Start Server</h4>
                         </div>
                         <div class="modal-body">
                             <div class="alert alert-block alert-danger" id="startServerModalCriticalError">
@@ -206,6 +206,36 @@
                                 <p id="startServerModalErrorMessage"></p>
                             </div>
                             <p class="text-success" id="successMessage"></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="modal fade" id="stopServerModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title text-warning">Stop Server</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-block alert-danger" id="stopServerModalCriticalError">
+                                <h4>Critical Error</h4>
+                                <p id="stopServerModalErrorMessage"></p>
+                            </div>
+                            <form class="form-inline">
+                                <label><input type="checkbox" id="stopServerModalForceStop"> Force Stop</label>
+                            </form>
+                            <p>Force stop forces the process to close rather than just sending "stop" to the console.
+                            This should only be enabled if the server has become unresponsive.</p>
+                            <button type="button" id="stopServerModalStopButton" class="btn btn-warning"><i class="fa fa-refresh" id="stopServerModalRefresh"></i> Stop</button>
+                            <input type="hidden" id="stopServerModalServerID">
+                            <p class="text-success" id="stopServerModalSuccessMessage"></p>
                         </div>
                         <div class="modal-footer">
                             <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
@@ -224,6 +254,7 @@
     $(function(){
 
         var serversTable = $("#serversTable");
+        var server_id;
 
         serversTable.on('click', '.delete-button', function(){
             server_id = $(this).attr('server-id');
@@ -234,7 +265,10 @@
 
         serversTable.on('click', '.start-server-button', function(){
             server_id = $(this).attr('server-id');
+            $("#startServerModalCriticalError").hide();
+            $("#successMessage").text("");
             $("#startServerModal").modal('show');
+            $("#startServerModalRefresh").addClass("fa-spin");
             $.post('{{ reverse_url("Servers_Ajax_StartServer") }}', {"server_id": server_id}).done(function(data){
                 if(data['result']['success']){
                     $("#successMessage").text("Successfully started the server.")
@@ -242,7 +276,32 @@
                     $("#startServerModalCriticalError").fadeIn();
                     $("#startServerModalErrorMessage").text(data['result']['message'])
                 }
+                $("#startServerModalRefresh").removeClass("fa-spin");
             })
+        });
+
+        serversTable.on('click', '.stop-server-button', function(){
+            server_id = $(this).attr('server-id');
+            $("#stopServerModal").modal('show');
+            $("#stopServerModalServerID").val(server_id);
+            $("#stopServerModalSuccessMessage").text(""); // Clear out message in case somebody decides it'd be a cool idea to stop more than one server at a time
+            $("#stopServerModalCriticalError").hide();
+        });
+
+        $("#stopServerModalStopButton").click(function(){
+            server_id = $("#stopServerModalServerID").val();
+            force = $("#stopServerModalForceStop").prop('checked');
+            $("#stopServerModalRefresh").addClass('fa-spin');
+
+            $.post('{{ reverse_url("Servers_Ajax_StopServer") }}', {"server_id": server_id, "force": force}).done(function(data){
+                if(data['result']['success']){
+                    $("#stopServerModalSuccessMessage").text("Successfully sent the stop request.");
+                } else {
+                    $("#stopServerModalCriticalError").fadeIn();
+                    $("#stopServerModalErrorMessage").text(data['result']['message']);
+                }
+                $("#stopServerModalRefresh").removeClass("fa-spin");
+            });
         });
 
         $("#deleteServerModalConfirm").removeAttr('disabled'); // for some reason it is disabled on page load in some circumstances
@@ -261,12 +320,10 @@
 
         var server = null;
         var ws_socket = new WebSocket("ws://" + document.domain + "{{ reverse_url("Servers_WebSocket_CreateServer") }}");
-        $("[id^=craftbukkit]").each(function(index){
-            console.log(index);
-        });
         $("#criticalError").hide();
         $("#craftbukkit_Form").hide();
         $("#startServerModalCriticalError").hide();
+        $("#stopServerModalCriticalError").hide();
         $("#serverSelection").change(function(event){
             server = event.currentTarget.value;
             if(server === "craftbukkit"){

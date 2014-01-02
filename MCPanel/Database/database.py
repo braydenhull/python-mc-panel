@@ -50,6 +50,7 @@ class Database():
             Memory = IntegerField(null=False)  # int as MB, translated to <memory>MB in start command
             ServerJar = CharField(max_length=128, null=False)
             Type = CharField(max_length=128, null=False)  # craftbukkit, minecraft, etc.
+            Stream = CharField(null=False, max_length=128)  # rb, dev, beta etc.
 
             class Meta:
                 database = self.database
@@ -111,8 +112,8 @@ class Database():
         password = passlib.hash.sha1_crypt.encrypt(password, rounds=self.rounds)
         self.Users.create(Username=escape.xhtml_escape(username), Password=password, Is_Admin=is_admin, force_insert=True)
 
-    def addServer(self, address, port, memory, owner, server_type="craftbukkit"):
-        self.Servers.create(Address=address, Port=port, Memory=memory, Owner=owner, ServerJar='minecraft.jar', Type=server_type)
+    def addServer(self, address, port, memory, owner, stream, server_type="craftbukkit"):
+        self.Servers.create(Address=address, Port=port, Memory=memory, Owner=owner, ServerJar='minecraft.jar', Type=server_type, Stream=stream)
 
     def getServers(self):
         return self.Servers.select()

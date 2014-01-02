@@ -41,8 +41,9 @@ class CreateServerHandler(BaseWebSocketHandler):
                 port = message['params']['port']
                 server_type = message['params']['type']
                 owner = message['owner']
+                stream = message['params']['stream']
                 if not self.application.db.isAddressTaken(address, port):
-                    self.application.db.addServer(address, port, memory, owner, server_type=server_type)
+                    self.application.db.addServer(address, port, memory, owner, stream, server_type=server_type)
                     self.write_message({"success": True, "message": "Added server to database.", "complete": False})
                     server_id = self.application.db.getServerID(address, port)
                     self.server_id = server_id
