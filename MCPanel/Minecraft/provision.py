@@ -79,7 +79,6 @@ class Bukkit:
 
     def install(self, ws, **kwargs):
         self.args = kwargs
-        print kwargs
         client = AsyncHTTPClient()
         self.ws = ws
         self.channel = self.args['stream']
@@ -134,7 +133,27 @@ class Bukkit:
         else:
             self.ws.write_message({"message": "Download failed. %s: %s" % (response.code, response.error), "success": False, "complete": False})
 
+    def update(self, handler, server_id, stream, autostart=False):
+        self.channel = stream
+        self.autostart = autostart
+        self.build = 0  # latest
+        self.home = '%s/%s%s/' % (handler.application.config.get('minecraft', 'home'), handler.application.process_prefix, server_id)
+        try: handler.application.supervisor.stop_process(handler.application.process_prefix + server_id)
+        except Exception as e: print e
+        os.remove(self.home + '/minecraft.jar')
+        self.build_info = self._get_build_info()
+        with open(os.path.dirname(handler.application.config.config_file) + '/bukkit_jar_cache/versions.json', 'r') as f:
+            self.versions = json.load(f)
+        if not str(self.build_info['build_number']) in self.versions['builds']:
+            request = urllib2.urlopen('http://dl.bukkit.org' + self.build_info['file']['url'])
+            with open(self.home + '/minecraft.jar', 'wb') as f:
+                shutil.copyfileobj(request, f)
+        else:
+            shutil.copyfile(self.versions['builds'][str(self.build_info['build_number'])]['file'], self.home + '/minecraft.jar')
+        if self.autostart:
+            handler.application.supervisor.start_process(handler.application.process_prefix + server_id)
 
+        return True
 
     def _finish_install(self):
         os.chown(self.home + '/minecraft.jar', pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_uid, pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_gid)

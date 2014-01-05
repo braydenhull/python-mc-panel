@@ -42,6 +42,8 @@ from Handlers.Servers.Server.Ajax.DeopPlayer import DeopPlayerHandler
 from Handlers.User.Index import UserIndexHandler
 from Handlers.Servers.Ajax.StartServer import StartServerHandler
 from Handlers.Servers.Ajax.StopServer import StopServerHandler
+from Handlers.Servers.Server.Update import ServerUpdateHandler
+from Handlers.Servers.Server.Ajax.Update import UpdateServerHandler
 
 
 class Application(tornado.web.Application):
@@ -75,7 +77,7 @@ class Application(tornado.web.Application):
             ('Servers_Index', r'/servers/?', ServersIndexHandler),
             ('Server_Index', r'/servers/(\d+)/', ServerIndexHandler),
             ('Server_Players', r'/servers/(\d+)/players', ServerPlayersHandler),
-            ('Servers_WebSocket_CreateServer', r'/servers/websocket/createserver', CreateServerHandler),
+            ('Servers_WebSocket_CreateServer', r'/servers/websocket/createServer', CreateServerHandler),
             ('Servers_Ajax_CheckAddress', r'/servers/ajax/checkAddress', CheckAddressHandler),
             ('Servers_Ajax_GetInfo', r'/servers/ajax/getInfo', GetInfoHandler),
             ('Server_Console', r'/servers/(\d+)/console', ServerConsoleHandler),
@@ -94,6 +96,8 @@ class Application(tornado.web.Application):
             ('User_Index', r'/user/?', UserIndexHandler),
             ('Servers_Ajax_StartServer', r'/servers/ajax/startServer', StartServerHandler),
             ('Servers_Ajax_StopServer', r'/servers/ajax/stopServer', StopServerHandler),
+            ('Server_Update', r'/servers/(\d+)/update', ServerUpdateHandler),
+            ('Server_Ajax_Update', r'/servers/(\d+)/ajax/update', UpdateServerHandler),
         ]
         handlers = [URLSpec(pattern, handler, name=name) for name, pattern, handler in handlers]
         settings = dict(
