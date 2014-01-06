@@ -16,7 +16,7 @@ class UpdateServerHandler(BaseServerAjaxHandler):
     @authenticated
     def post(self, server_id):
         if 'autostart' in self.request.arguments:
-            autostart = True if self.get_argument('autostart') == 'true' else 'false'
+            autostart = True if self.get_argument('autostart') == 'true' else False
             self.server = self.application.db.getServer(server_id)
             run_background(run_update, self.on_complete, (self.server.Stream, server_id, self, autostart,))
         else:

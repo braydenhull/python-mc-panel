@@ -13,13 +13,39 @@
 <div class="container" style="padding-top: 25px;">
     {% include "includes/server-pills.template" %}
     <div class="col-md-10">
-        <h3>Not yet implemented.</h3>
+        <p>This will update, if necessary, the server to the latest build available in the selected stream.</p>
+        <strong id="currentVersion">Current version: ()</strong><br>
+        <strong id="newVersion">Newest Version: ()</strong><br><br>
+        <form class="form-inline">
+            <button type="button" class="btn btn-success" id="updateServer"><i class="fa fa-refresh" id="refresh"></i> Update Server</button>
+            <label><input type="checkbox" checked="" id="autostart"> Autostart server after finishing</label>
+        </form>
+        <p id="message" class="text-success"></p>
+
+        {% set server = handler.application.db.getServer(server_id) %}
     </div>
 </div>
 <script src="../../../static/js/jquery-2.0.3.min.js"></script>
 <script src="../../../static/js/bootstrap.min.js"></script>
 <script>
     $(function(){
+        $.post('{{ reverse_url("Server_Ajax_GetPlayers", server_id) }}').done(function(data){
+            $("#currentVersion").text("Current Version: " + data['result']['software'] + " (Minecraft " + data['result']['version'] + ")")
+        });
+
+        $.post('{{ reverse_url("Servers_Ajax_GetInfo") }}', {"server_type": "{{ server.Type }}", "request_type": "get_builds", "stream": "{{ server.Stream }}"}).done(function(data){
+            $("#newVersion").text("Newest Version: " + data['result']['results']['latest_version'] + " (" + data['result']['results']['builds'][0]  + ")")
+        });
+
+        $("#updateServer").click(function(){
+            $(this).attr('disabled', '').addClass('disabled');
+            $("#refresh").addClass('fa-spin');
+            $.post('{{ reverse_url("Server_Ajax_Update", server_id) }}', {"autostart": $("#autostart").prop("checked")}).done(function(data){
+                $("#refresh").removeClass('fa-spin');
+                $("#message").text("Update has finished successfully.")
+            })
+        });
+
         $("#server-id{{ server_id }}").addClass("active");
     })
 </script>
