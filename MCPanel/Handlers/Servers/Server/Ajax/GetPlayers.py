@@ -24,7 +24,7 @@ class GetPlayersHandler(BaseServerAjaxHandler):
 
 
     def on_complete(self, result):
-        self.finish({"result": {"success": True, "message": None, "max_players": result['maxplayers'], "current_players": result['numplayers'], "players": result['players'], "version": result['version'], "software": result['software']}})
+        self.finish({"result": {"success": True, "message": None, "max_players": result['maxplayers'], "current_players": result['numplayers'], "players": result['players'], "version": result['version'], "software": result['software'], "plugins": result['plugins']}})
 
 
 def run_background(func, callback, args=(), kwds={}):
