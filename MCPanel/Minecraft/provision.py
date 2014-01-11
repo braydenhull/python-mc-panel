@@ -91,7 +91,9 @@ class Bukkit:
             self.home = pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_dir
             if not os.path.exists(self.home):
                 os.mkdir(self.home)
-                os.chown(self.home, self.ws.application.process_prefix + str(self.ws.server_id), self.ws.application.process_prefix + str(self.ws.server_id))
+                print type(self.ws.server_id)
+                user = self.ws.application.process_prefix + str(self.ws.server_id)
+                os.chown(self.home, pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
 
             with open(self.home + '/server.properties', 'w') as f:
                 f.write("enable-query=true")  # enable the query API to get player listings
@@ -244,7 +246,5 @@ class Bukkit:
             subprocess.Popen(['userdel', '%s%s' % (application.process_prefix, server_id)], shell=False)
         except OSError as e:
             print "Failed to remove Linux user for server %s. Error: %s" % (server_id, e)
-
-        application.db.deleteServer(int(server_id))
 
         return True
