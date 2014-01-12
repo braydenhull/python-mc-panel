@@ -44,6 +44,8 @@ from Handlers.Servers.Ajax.StartServer import StartServerHandler
 from Handlers.Servers.Ajax.StopServer import StopServerHandler
 from Handlers.Servers.Server.Update import ServerUpdateHandler
 from Handlers.Servers.Server.Ajax.Update import UpdateServerHandler
+import psutil
+import netifaces # even though they're unnecessary, include them anyway so that pyinstaller will build them in, it can't analyse templates
 
 
 class Application(tornado.web.Application):
