@@ -39,9 +39,10 @@ class BaseHandler(tornado.web.RequestHandler):
             raise HTTPError(403)
 
     def can_view_server(self, server_id):
-        try:
-            if not self.application.db.isUserAdmin(self.current_user):
-                if not self.application.db.getServer(server_id).Owner == self.current_user:
-                    raise HTTPError(403)
-        except DoesNotExist:
-            raise HTTPError(403)
+        if self.current_user in self.application.usernames:
+            try:
+                if not self.application.db.isUserAdmin(self.current_user):
+                    if not self.application.db.getServer(server_id).Owner == self.current_user:
+                        raise HTTPError(403)
+            except DoesNotExist:
+                raise HTTPError(403)
