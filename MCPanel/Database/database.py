@@ -4,6 +4,7 @@ from peewee import *
 import passlib.hash
 from Config import config
 from tornado.web import escape
+import os
 
 
 class Database():
@@ -14,7 +15,11 @@ class Database():
     def __init__(self):
         self.config = config()
         self.rounds = 20000
+        create_db = False
         if self.config.get('database', 'type') == 'sqlite':
+            if not os.path.exists(self.config.get('database', 'host')):
+                print "Database is not populated. Initialising.."
+                create_db = True
             self.database = SqliteDatabase(self.config.get('database', 'host'))
             self.database.connect()
         elif self.config.get('database', 'type') == 'mysql':
@@ -51,6 +56,7 @@ class Database():
             ServerJar = CharField(max_length=128, null=False)
             Type = CharField(max_length=128, null=False)  # craftbukkit, minecraft, etc.
             Stream = CharField(null=False, max_length=128)  # rb, dev, beta etc.
+            Is_Active = BooleanField(default=False)  # to get around a weird issue with sqlite and autoincrement, always make unique IDs, keep them unique regardless! mysql's default behaviour makes this a non-issue but sqlite :(
 
             class Meta:
                 database = self.database
@@ -100,6 +106,11 @@ class Database():
         self.Role_Permissions = Role_Permissions
         self.User_Roles = User_Roles
 
+        if create_db:
+            self.initialiseDatabase()
+            self.addUser('Admin', 'admin', True)
+            print "Database initialised. Login is: \r\nUsername: Admin\r\nPassword: admin"
+
     def initialiseDatabase(self):  # if param is true it'll suppress errors
         self.Servers.create_table(True)
         self.Users.create_table(True)
@@ -113,30 +124,30 @@ class Database():
         self.Users.create(Username=escape.xhtml_escape(username), Password=password, Is_Admin=is_admin, force_insert=True)
 
     def addServer(self, address, port, memory, owner, stream, server_type="craftbukkit"):
-        self.Servers.create(Address=address, Port=port, Memory=memory, Owner=owner, ServerJar='minecraft.jar', Type=server_type, Stream=stream)
+        self.Servers.create(Address=address, Port=port, Memory=memory, Owner=owner, ServerJar='minecraft.jar', Type=server_type, Stream=stream, Is_Active=True)
 
     def getServers(self):
-        return self.Servers.select()
+        return self.Servers.select().where(self.Servers.Is_Active == True)
 
     def getServer(self, server_id):
-        return self.Servers.select().where(self.Servers.ID == server_id).get()
+        return self.Servers.select().where(self.Servers.ID == server_id, self.Servers.Is_Active == True).get()
 
     def serverExists(self, server_id):
         try:
-            self.Servers.select().where(self.Servers.ID == server_id).get()
+            self.Servers.select().where(self.Servers.ID == server_id, self.Servers.Is_Active == True).get()
             return True
         except DoesNotExist:
             return False
 
     def getServerID(self, address, port):
-        return self.Servers.select().where(self.Servers.Address == address, self.Servers.Port == port).get().ID
+        return self.Servers.select().where(self.Servers.Address == address, self.Servers.Port == port, self.Servers.Is_Active == True).get().ID
 
     def isAddressTaken(self, address, port):
         try:
             if address == '0.0.0.0':
-                self.Servers.select().where(self.Servers.Port == port).get()
+                self.Servers.select().where(self.Servers.Port == port, self.Servers.Is_Active == True).get()
             else:
-                self.Servers.select().where(self.Servers.Address == address, self.Servers.Port == port).get()
+                self.Servers.select().where(self.Servers.Address == address, self.Servers.Port == port, self.Servers.Is_Active == True).get()
             return True
         except DoesNotExist:
             return False
@@ -179,7 +190,7 @@ class Database():
         (self.Users.get(self.Users.Username == user)).delete_instance()
 
     def deleteServer(self, server_id):
-        (self.Servers.get(self.Servers.ID == server_id)).delete_instance()
+        self.Servers.update(Is_Active = False).where(self.Servers.ID == server_id).execute()
 
     def editUser(self, username, password=None, api_key=None, session=None, is_admin=None):
         user = self.Users()
