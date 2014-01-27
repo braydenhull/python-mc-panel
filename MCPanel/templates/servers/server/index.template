@@ -25,7 +25,8 @@
                     <div id="memoryAllocated" class="progress-bar progress-bar-success"></div>
                     <div id="memoryRemaining" class="progress-bar progress-bar-info"></div>
                 </div>
-                <span class="label label-danger">Used Memory</span> <span class="label label-success">Available Memory</span> <span class="label label-info">Remaining System Memory</span>
+                <span class="label label-danger">Used Memory</span> <span class="label label-success">Available Memory</span> <span class="label label-info">Remaining System Memory</span><br>
+                <input type="checkbox" checked="" id="showSystemMemory"> Show System Memory
             </label>
         </div>
 
@@ -50,10 +51,23 @@
         $("#server-id{{ server_id }}").addClass("active");
         function refreshProcessStats(){
             $.post("{{ reverse_url('Server_Ajax_GetProcessInfo', server_id) }}").done(function(data){
-                $("#memoryUsage").css("width", data['result']['data']['current_memory_percent'] + "%").text(data['result']['data']['current_memory_percent'] + '%');
-                var memoryAllocationRemaining = data['result']['data']['memory_allocation_percent'] - data['result']['data']['current_memory_percent'];
+                var memoryUsage;
+                var memoryAllocationRemaining;
+                var memoryRemaining;
+                if(!$("#showSystemMemory").prop('checked')){
+                    memoryUsage = data['result']['data']['current_memory_as_percentage_of_allocation'];
+                    memoryAllocationRemaining = 100 - memoryUsage;
+                    memoryRemaining = 0;
+                } else {
+                    memoryUsage = data['result']['data']['current_memory_percent'];
+                    memoryAllocationRemaining = data['result']['data']['memory_allocation_percent'] - data['result']['data']['current_memory_percent'];
+                    memoryRemaining = 100 - (data['result']['data']['current_memory_percent'] + memoryAllocationRemaining);
+                }
+                $("#memoryUsage").css("width", memoryUsage + "%").text(memoryUsage + '%');
+
+
                 $("#memoryAllocated").css("width", memoryAllocationRemaining + '%').text(memoryAllocationRemaining + '%');
-                var memoryRemaining = 100 - (data['result']['data']['current_memory_percent'] + memoryAllocationRemaining);
+
                 $("#memoryRemaining").css('width', memoryRemaining + '%').text(memoryRemaining + '%');
                 $("#cpuUsage").css("width", data['result']['data']['cpu_percent'] + '%').text(data['result']['data']['cpu_percent'] + '%');
                 var cpuIdle = (100 - data['result']['data']['cpu_percent']);
