@@ -277,6 +277,10 @@
                     $("#startServerModalErrorMessage").text(data['result']['message'])
                 }
                 $("#startServerModalRefresh").removeClass("fa-spin");
+            }).fail(function(data){
+                $("#startServerModalCriticalError").fadeIn();
+                $("#startServerModalErrorMessage").text("The server returned an error. Please notify the system administrators if this persists. Error Data: " + JSON.stringify(data['responseJSON']));
+                $("#startServerModalRefresh").removeClass("fa-spin");
             })
         });
 
@@ -290,7 +294,7 @@
 
         $("#stopServerModalStopButton").click(function(){
             server_id = $("#stopServerModalServerID").val();
-            force = $("#stopServerModalForceStop").prop('checked');
+            var force = $("#stopServerModalForceStop").prop('checked');
             $("#stopServerModalRefresh").addClass('fa-spin');
 
             $.post('{{ reverse_url("Servers_Ajax_StopServer") }}', {"server_id": server_id, "force": force}).done(function(data){
@@ -300,6 +304,10 @@
                     $("#stopServerModalCriticalError").fadeIn();
                     $("#stopServerModalErrorMessage").text(data['result']['message']);
                 }
+                $("#stopServerModalRefresh").removeClass("fa-spin");
+            }).fail(function(data){
+                $("#stopServerModalCriticalError").fadeIn();
+                $("#stopServerModalErrorMessage").text("The server returned an error. Please notify the system administrators if this persists. Error Data: " + JSON.stringify(data['responseJSON']));
                 $("#stopServerModalRefresh").removeClass("fa-spin");
             });
         });

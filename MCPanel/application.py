@@ -44,6 +44,7 @@ from Handlers.Servers.Ajax.StartServer import StartServerHandler
 from Handlers.Servers.Ajax.StopServer import StopServerHandler
 from Handlers.Servers.Server.Update import ServerUpdateHandler
 from Handlers.Servers.Server.Ajax.Update import UpdateServerHandler
+from Handlers.Servers.Server.Ajax.GetProcessInfo import GetProcessInfoHandler
 import psutil
 import netifaces # even though they're unnecessary, include them anyway so that pyinstaller will build them in, it can't analyse templates
 
@@ -100,6 +101,7 @@ class Application(tornado.web.Application):
             ('Servers_Ajax_StopServer', r'/servers/ajax/stopServer', StopServerHandler),
             ('Server_Update', r'/servers/(\d+)/update', ServerUpdateHandler),
             ('Server_Ajax_Update', r'/servers/(\d+)/ajax/update', UpdateServerHandler),
+            ('Server_Ajax_GetProcessInfo', r'/servers/(\d+)/ajax/getProcessInfo', GetProcessInfoHandler),
         ]
         handlers = [URLSpec(pattern, handler, name=name) for name, pattern, handler in handlers]
         settings = dict(

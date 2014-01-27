@@ -1,3 +1,4 @@
+{% import psutil as psutil %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -13,18 +14,55 @@
     {% include "includes/server-pills.template" %}
     <div class="col-md-10">
         {% if not handler.application.supervisor.is_process_running(process_prefix + server_id) %}
-        <h4 class="text-danger text-center">Server is not running!</h4>
+        <h4 class="text-danger text-center">Server is not running</h4>
         {% else %}
-        <h4 class="text-warning text-center">Server process is running but not responding.</h4>
+        <h4 class="text-success text-center">Server is running</h4>
+        <div class="col-md-6">
+            <label style="width: 100%;">
+                Memory Usage
+                <div class="progress">
+                    <div id="memoryUsage" class="progress-bar progress-bar-danger"></div>
+                    <div id="memoryAllocated" class="progress-bar progress-bar-success"></div>
+                    <div id="memoryRemaining" class="progress-bar progress-bar-info"></div>
+                </div>
+                <span class="label label-danger">Used Memory</span> <span class="label label-success">Available Memory</span> <span class="label label-info">Remaining System Memory</span>
+            </label>
+        </div>
+
+        <div class="col-md-6">
+            <label style="width: 100%;">
+                System CPU Usage
+                <div class="progress">
+                    <div id="cpuUsage" class="progress-bar progress-bar-danger"></div>
+                    <div id="cpuIdle" class="progress-bar progress-bar-success"></div>
+                </div>
+                <span class="label label-danger">CPU Used</span> <span class="label label-success">Idle CPU</span>
+            </label>
+        </div>
         {% end %}
-        <br>
+
     </div>
 </div>
 <script src="../../../static/js/jquery-2.0.3.min.js"></script>
 <script src="../../../static/js/bootstrap.min.js"></script>
 <script>
     $(function(){
-        $("#server-id{{ server_id }}").addClass("active")
+        $("#server-id{{ server_id }}").addClass("active");
+        function refreshProcessStats(){
+            $.post("{{ reverse_url('Server_Ajax_GetProcessInfo', server_id) }}").done(function(data){
+                $("#memoryUsage").css("width", data['result']['data']['current_memory_percent'] + "%").text(data['result']['data']['current_memory_percent'] + '%');
+                var memoryAllocationRemaining = data['result']['data']['memory_allocation_percent'] - data['result']['data']['current_memory_percent'];
+                $("#memoryAllocated").css("width", memoryAllocationRemaining + '%').text(memoryAllocationRemaining + '%');
+                var memoryRemaining = 100 - (data['result']['data']['current_memory_percent'] + memoryAllocationRemaining);
+                $("#memoryRemaining").css('width', memoryRemaining + '%').text(memoryRemaining + '%');
+                $("#cpuUsage").css("width", data['result']['data']['cpu_percent'] + '%').text(data['result']['data']['cpu_percent'] + '%');
+                var cpuIdle = (100 - data['result']['data']['cpu_percent']);
+                $("#cpuIdle").css("width", cpuIdle + '%').text(cpuIdle + '%');
+            })
+        }
+
+        refreshProcessStats();
+        setInterval(refreshProcessStats, 1100)
     })
 </script>
 {% include "includes/footer.template" %}

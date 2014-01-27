@@ -8,4 +8,4 @@ class BaseServerAjaxHandler(BaseServerHandler):
         if status_code == 403:
             self.finish({'result': {'success': False, 'message': 'Forbidden request.'}})
         else:
-            self.finish({'result': {'success': False, 'message': status_code}})
+            self.finish({'result': {'success': False, 'message': str(kwargs['exc_info'][1])}})
