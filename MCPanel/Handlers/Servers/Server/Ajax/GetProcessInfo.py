@@ -17,10 +17,13 @@ class GetProcessInfoHandler(BaseServerAjaxHandler):
     @authenticated
     def post(self, server_id):
         pid = self.application.supervisor.get_pid(self.application.process_prefix + server_id)
-        process = psutil.Process(pid)
-        self.process = process
-        self.server_id = server_id
-        run_background(get_cpu_percent, self.on_complete, (process,))
+        try:
+            process = psutil.Process(pid)
+            self.process = process
+            self.server_id = server_id
+            run_background(get_cpu_percent, self.on_complete, (process,))
+        except psutil.NoSuchProcess as e:
+            self.finish({"result": {"success": False, "message": "Server is not running or could not find valid PID."}})
 
     def on_complete(self, result):
         self.finish({"result": {

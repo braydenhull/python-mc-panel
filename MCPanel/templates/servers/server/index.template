@@ -17,6 +17,10 @@
         <h4 class="text-danger text-center">Server is not running</h4>
         {% else %}
         <h4 class="text-success text-center">Server is running</h4>
+        <div class="alert alert-block alert-danger" id="serverDashBoardCriticalError">
+            <h4>Critical Error</h4>
+            <p id="serverDashBoardErrorMessage"></p>
+        </div>
         <div class="col-md-6">
             <label style="width: 100%;">
                 Memory Usage
@@ -27,7 +31,7 @@
                 </div>
                 <span class="label label-danger">Used Memory</span> <span class="label label-success">Available Memory</span> <span class="label label-info">Remaining System Memory</span><br>
                 <input type="checkbox" checked="" id="showSystemMemory"> Show System Memory
-            </label>
+            </label><p>Sometimes it might show more Used Memory than Available, this is due to JVM overheads</p>
         </div>
 
         <div class="col-md-6">
@@ -49,29 +53,33 @@
 <script>
     $(function(){
         $("#server-id{{ server_id }}").addClass("active");
+        $("#serverDashBoardCriticalError").hide();
         function refreshProcessStats(){
             $.post("{{ reverse_url('Server_Ajax_GetProcessInfo', server_id) }}").done(function(data){
-                var memoryUsage;
-                var memoryAllocationRemaining;
-                var memoryRemaining;
-                if(!$("#showSystemMemory").prop('checked')){
-                    memoryUsage = data['result']['data']['current_memory_as_percentage_of_allocation'];
-                    memoryAllocationRemaining = 100 - memoryUsage;
-                    memoryRemaining = 0;
+                if(data['result']['success']){
+                    $("#serverDashBoardCriticalError").hide();
+                    var memoryUsage;
+                    var memoryAllocationRemaining;
+                    var memoryRemaining;
+                    if(!$("#showSystemMemory").prop('checked')){
+                        memoryUsage = data['result']['data']['current_memory_as_percentage_of_allocation'];
+                        memoryAllocationRemaining = 100 - memoryUsage;
+                        memoryRemaining = 0;
+                    } else {
+                        memoryUsage = data['result']['data']['current_memory_percent'];
+                        memoryAllocationRemaining = data['result']['data']['memory_allocation_percent'] - data['result']['data']['current_memory_percent'];
+                        memoryRemaining = 100 - (data['result']['data']['current_memory_percent'] + memoryAllocationRemaining);
+                    }
+                    $("#memoryUsage").css("width", memoryUsage + "%").text(memoryUsage + '%');
+                    $("#memoryAllocated").css("width", memoryAllocationRemaining + '%').text(memoryAllocationRemaining + '%');
+                    $("#memoryRemaining").css('width', memoryRemaining + '%').text(memoryRemaining + '%');
+                    $("#cpuUsage").css("width", data['result']['data']['cpu_percent'] + '%').text(data['result']['data']['cpu_percent'] + '%');
+                    var cpuIdle = (100 - data['result']['data']['cpu_percent']);
+                    $("#cpuIdle").css("width", cpuIdle + '%').text(cpuIdle + '%');
                 } else {
-                    memoryUsage = data['result']['data']['current_memory_percent'];
-                    memoryAllocationRemaining = data['result']['data']['memory_allocation_percent'] - data['result']['data']['current_memory_percent'];
-                    memoryRemaining = 100 - (data['result']['data']['current_memory_percent'] + memoryAllocationRemaining);
+                    $("#serverDashBoardErrorMessage").text(data['result']['message']);
+                    $("#serverDashBoardCriticalError").fadeIn();
                 }
-                $("#memoryUsage").css("width", memoryUsage + "%").text(memoryUsage + '%');
-
-
-                $("#memoryAllocated").css("width", memoryAllocationRemaining + '%').text(memoryAllocationRemaining + '%');
-
-                $("#memoryRemaining").css('width', memoryRemaining + '%').text(memoryRemaining + '%');
-                $("#cpuUsage").css("width", data['result']['data']['cpu_percent'] + '%').text(data['result']['data']['cpu_percent'] + '%');
-                var cpuIdle = (100 - data['result']['data']['cpu_percent']);
-                $("#cpuIdle").css("width", cpuIdle + '%').text(cpuIdle + '%');
             })
         }
 
