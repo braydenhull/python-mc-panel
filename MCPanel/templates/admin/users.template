@@ -119,12 +119,12 @@
             $.post("{{ reverse_url("Admin_Ajax_GetUsers") }}")
             .done(function(data){
                 $("#usersTable").empty();
-                $(data['result']).each(function(index, name){
-                    $("#usersTable").append('<tr><td>' + data['result'][index]['username'] + '</td>' +
-                            '<td><input type="checkbox" disabled ' + ((data['result'][index]['is_admin']) ? 'checked' :  '') + ' </td>' +
-                            '<td><button user-id="' + data['result'][index]['username'] + '" id="editUser" type="button" class="btn btn-warning btn-sm edit-button"><i class="fa fa-edit"></i></button> ' +
-                            '<button user-id="' + data['result'][index]['username'] + '" id="deleteUser" type="button" class="btn btn-danger btn-sm delete-button"><i class="fa fa-trash-o"></i></button></td></tr>');
-                    users[data['result'][index]['username']] = {"Is_Admin": data['result'][index]['is_admin']}
+                $(data['result']['users']).each(function(index, name){
+                    $("#usersTable").append('<tr><td>' + data['result']['users'][index]['username'] + '</td>' +
+                            '<td><input type="checkbox" disabled ' + ((data['result']['users'][index]['is_admin']) ? 'checked' :  '') + ' </td>' +
+                            '<td><button user-id="' + data['result']['users'][index]['username'] + '" id="editUser" type="button" class="btn btn-warning btn-sm edit-button"><i class="fa fa-edit"></i></button> ' +
+                            '<button user-id="' + data['result']['users'][index]['username'] + '" id="deleteUser" type="button" class="btn btn-danger btn-sm delete-button"><i class="fa fa-trash-o"></i></button></td></tr>');
+                    users[data['result']['users'][index]['username']] = {"Is_Admin": data['result']['users'][index]['is_admin']}
                 });
                 $("#refreshTableIcon").removeClass("fa-spin")
             })

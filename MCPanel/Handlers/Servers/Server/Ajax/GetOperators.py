@@ -15,6 +15,6 @@ class GetOperatorsHandler(BaseServerAjaxHandler):
             for line in f.readlines():
                 if line.startswith('#'): continue
 
-                ops.append(line)
+                ops.append(line.strip())
 
         self.finish({"result": {"success": True, "message": None, "ops": ops}})

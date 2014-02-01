@@ -10,7 +10,7 @@ from Minecraft.provision import Bukkit
 
 class CreateServerHandler(BaseWebSocketHandler):
     def open(self):
-        self.write_message({"message": "Ready", "success": True})
+        self.write_message({"message": "Ready", "success": True, "complete": False})
 
     def on_message(self, message):
         try:
