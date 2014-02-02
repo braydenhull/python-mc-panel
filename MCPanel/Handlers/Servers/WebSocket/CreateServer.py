@@ -49,10 +49,9 @@ class CreateServerHandler(BaseWebSocketHandler):
                     self.server_id = server_id
                     self.write_message({"success": True, "message": "Verified database entry, got ID %s" % server_id, "complete": False})
                     if server_type == "craftbukkit":
-                        self.write_message({"message": "entered bukkit", "success": True, "complete": False})
                         Bukkit().install(self, **message['params'])
                     else:
-                            self.write_message({"success": False, "message": "Type not implemented.", "complete": False})
+                        self.write_message({"success": False, "message": "Type not implemented.", "complete": False})
                 else:
                     self.write_message({"success": False, "message": "IP/Port combination already taken.", "complete": False})
         except ValueError or KeyError:
