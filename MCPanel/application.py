@@ -63,8 +63,11 @@ class Application(tornado.web.Application):
         self.parse_supervisor_config()
         self.process_prefix = "minecraft_"
         self.craftbukkit_build_list = {}
+        self.vanilla_build_list = {}
         self.supervisor = Supervisor(self.supervisor_auth['Username'], self.supervisor_auth['Password'])
         self.setup_bukkit_jar_cache()
+        self.setup_vanilla_jar_cache()
+        self.vanilla_builds = {}
         handlers = [
             ('Home', r'/', IndexHandler),
             ('Login', r'/login', LoginHandler),
@@ -161,4 +164,13 @@ class Application(tornado.web.Application):
 
         if not os.path.exists(directory + '/bukkit_jar_cache/versions.json'):
             with open(directory + '/bukkit_jar_cache/versions.json', 'w') as f:
+                json.dump({'builds': {}}, f)
+
+    def setup_vanilla_jar_cache(self):
+        directory = os.path.dirname(self.config.config_file)
+        if not os.path.exists(directory + '/vanilla_jar_cache/'):
+            os.mkdir(directory + '/vanilla_jar_cache/')
+
+        if not os.path.exists(directory + '/vanilla_jar_cache/versions.json'):
+            with open(directory + '/vanilla_jar_cache/versions.json', 'w') as f:
                 json.dump({'builds': {}}, f)

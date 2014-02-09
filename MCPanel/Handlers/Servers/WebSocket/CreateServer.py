@@ -3,9 +3,9 @@ __author__ = 'brayden'
 from Base import BaseWebSocketHandler
 import json
 import tornado.escape
-import base64
 from peewee import DoesNotExist
 from Minecraft.provision import Bukkit
+from Minecraft.provision import Vanilla
 
 
 class CreateServerHandler(BaseWebSocketHandler):
@@ -50,9 +50,12 @@ class CreateServerHandler(BaseWebSocketHandler):
                     self.write_message({"success": True, "message": "Verified database entry, got ID %s" % server_id, "complete": False})
                     if server_type == "craftbukkit":
                         Bukkit().install(self, **message['params'])
+                    elif server_type == "vanilla":
+                        Vanilla().install(self, use_websocket=True,**message['params'])
                     else:
                         self.write_message({"success": False, "message": "Type not implemented.", "complete": False})
                 else:
                     self.write_message({"success": False, "message": "IP/Port combination already taken.", "complete": False})
         except ValueError or KeyError:
+            print message
             self.write_message({"success": False, "message": "Not well formatted message.", "complete": False})

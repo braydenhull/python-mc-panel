@@ -30,7 +30,7 @@
                     <div id="memoryRemaining" class="progress-bar progress-bar-info"></div>
                 </div>
                 <span class="label label-danger">Used Memory</span> <span class="label label-success">Available Memory</span> <span class="label label-info">Remaining System Memory</span><br>
-                <input type="checkbox" checked="" id="showSystemMemory"> Show System Memory
+                <input type="checkbox" id="showSystemMemory"> Show System Memory
             </label><p>Sometimes it might show more Used Memory than Available, this is due to JVM overheads</p>
         </div>
 

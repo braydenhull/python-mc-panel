@@ -69,6 +69,7 @@
                                 <select id="serverSelection" class="form-control">
                                     <option>Please select an option</option>
                                     <option value="craftbukkit">CraftBukkit</option>
+                                    <option value="vanilla">Vanilla Minecraft</option>
                                 </select>
                             </label>
                             <label>
@@ -112,9 +113,9 @@
                                     <label>
                                         Channel
                                         <select class="form-control" id="craftbukkit_BuildChannel">
-                                            <option value="rb">Recommended</option>
-                                            <option value="beta">Beta</option>
-                                            <option value="dev">Development</option>
+{#                                            <option value="rb">Recommended</option>#}
+{#                                            <option value="beta">Beta</option>#}
+{#                                            <option value="dev">Development</option>#}
                                         </select>
                                     </label>
 
@@ -125,6 +126,25 @@
                                     </label>
                                 </div>
                                 <strong>Build Version: </strong><span id="craftbukkit_BuildVersion"></span>
+                            </div>
+
+                            <div id="vanilla_Form">
+                                <div class="form-inline">
+                                    <label>
+                                        Channel
+                                        <select class="form-control" id="vanilla_BuildChannel">
+{#                                            <option value="release">Release</option>#}
+{#                                            <option value="snapshot">Snapshot</option>#}
+                                        </select>
+                                    </label>
+
+                                    <label>
+                                        Version
+                                        <select class="form-control" id="vanilla_BuildSelect">
+                                        </select>
+                                    </label>
+                                </div>
+                                <strong>Build Version: </strong><span id="vanilla_BuildVersion"></span>
                             </div>
 
                         </div>
@@ -330,12 +350,14 @@
         var ws_socket = new WebSocket("ws://" + document.domain + "{{ reverse_url("Servers_WebSocket_CreateServer") }}");
         $("#criticalError").hide();
         $("#craftbukkit_Form").hide();
+        $("#vanilla_Form").hide();
         $("#startServerModalCriticalError").hide();
         $("#stopServerModalCriticalError").hide();
         $("#serverSelection").change(function(event){
             server = event.currentTarget.value;
             if(server === "craftbukkit"){
                 $("#craftbukkit_Form").slideDown();
+                $("#vanilla_Form").hide();
                 $("#refresh").addClass("fa-spin");
                 $.post('{{ reverse_url('Servers_Ajax_GetInfo') }}', {'server_type': server, 'request_type': 'get_streams'}).done(function(data){
                     $("#craftbukkit_BuildChannel").empty();
@@ -344,6 +366,17 @@
                     });
                     refresh_build_list(server)
                 });
+            } else if(server === "vanilla"){
+                $("#craftbukkit_Form").hide();
+                $("#refresh").addClass("fa-spin");
+                $.post('{{ reverse_url('Servers_Ajax_GetInfo') }}', {'server_type': server, 'request_type': 'get_streams'}).done(function(data){
+                    $("#vanilla_BuildChannel").empty();
+                    $.each(data['result']['results']['values'], function(index){
+                        $("#vanilla_BuildChannel").append($("<option></option>").val(data['result']['results']['values'][index]['value']).html(data['result']['results']['values'][index]['name']))
+                    });
+                    refresh_build_list(server)
+                });
+                $("#vanilla_Form").slideDown();
             }
         });
 
@@ -394,7 +427,6 @@
         });
 
         $("[id*=BuildChannel],[id*=BuildSelect]").change(function(event){
-            console.log(event['currentTarget']['id']);
             $("#refresh").addClass("fa-spin");
             if(event['currentTarget']['id'].split('_')[1] === 'BuildChannel'){
                 refresh_build_list(server)

@@ -8,6 +8,7 @@ import os
 import pwd
 import shutil
 import subprocess
+from tornado import gen
 
 
 class Bukkit:
@@ -137,22 +138,36 @@ class Bukkit:
 
     def update(self, handler, server_id, stream, autostart=False):
         self.channel = stream
-        self.autostart = autostart
+        autostart = autostart
         self.build = 0  # latest
-        self.home = '%s/%s%s/' % (handler.application.config.get('minecraft', 'home'), handler.application.process_prefix, server_id)
+        config_location = os.path.dirname(handler.application.config.config_file)
+        home = '%s/%s%s/' % (handler.application.config.get('minecraft', 'home'), handler.application.process_prefix, server_id)
         try: handler.application.supervisor.stop_process(handler.application.process_prefix + server_id)
         except Exception as e: print e
-        os.remove(self.home + '/minecraft.jar')
-        self.build_info = self._get_build_info()
+        try: os.remove(home + '/minecraft.jar')
+        except Exception as e: print e
+        build_info = self._get_build_info()
+        build = str(build_info['build_number'])
         with open(os.path.dirname(handler.application.config.config_file) + '/bukkit_jar_cache/versions.json', 'r') as f:
-            self.versions = json.load(f)
-        if not str(self.build_info['build_number']) in self.versions['builds']:
-            request = urllib2.urlopen('http://dl.bukkit.org' + self.build_info['file']['url'])
-            with open(self.home + '/minecraft.jar', 'wb') as f:
+            versions = json.load(f)
+        print versions
+        if not str(build) in versions['builds']:
+            request = urllib2.urlopen('http://dl.bukkit.org' + build_info['file']['url'])
+            with open(home + '/minecraft.jar', 'wb') as f:
                 shutil.copyfileobj(request, f)
+            shutil.copyfile(home + '/minecraft.jar', config_location + '/bukkit_jar_cache/%s.jar' % build)
+            with open(config_location + '/bukkit_jar_cache/versions.json', 'w') as f:
+                versions['builds'][build] = {"file": config_location + '/bukkit_jar_cache/%s.jar' % build}
+                json.dump(versions, f)
+            os.chmod(home + '/minecraft.jar', 0700)
+            user = handler.application.process_prefix + server_id
+            os.chown(home + '/minecraft.jar', pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
         else:
-            shutil.copyfile(self.versions['builds'][str(self.build_info['build_number'])]['file'], self.home + '/minecraft.jar')
-        if self.autostart:
+            shutil.copyfile(versions['builds'][build]['file'], home + '/minecraft.jar')
+            os.chmod(home + '/minecraft.jar', 0700)
+            user = handler.application.process_prefix + server_id
+            os.chown(home + '/minecraft.jar', pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
+        if autostart:
             handler.application.supervisor.start_process(handler.application.process_prefix + server_id)
 
         return True
@@ -206,7 +221,8 @@ class Bukkit:
                                         "message": None,
                                         "cached": False}})
 
-    def delete_server(self, server_id, application):
+    @staticmethod
+    def delete_server(server_id, application):
         try:
             try:
                 application.supervisor.server.supervisor.stopProcess(application.process_prefix + server_id)
@@ -246,5 +262,156 @@ class Bukkit:
             subprocess.Popen(['userdel', '%s%s' % (application.process_prefix, server_id)], shell=False)
         except OSError as e:
             print "Failed to remove Linux user for server %s. Error: %s" % (server_id, e)
+
+        return True
+
+
+class Vanilla:
+    def __init__(self, channel="release", build=0):
+        self.channel = channel
+        self.build = build
+        self.user_agent = 'python-mc-panel/0.1-dev'
+
+    class VanillaProvisionError(Exception):
+        def __init__(self, message, name):
+            self.message = message
+            self.name = name
+
+        def __str__(self):
+            return repr(self.message)
+
+    def get_builds(self, handler, cache=True):
+        self.handler = handler
+        if cache:
+            if self.channel in handler.application.vanilla_builds:
+                handler.finish({"result": {"success": True, "message": None, "results": {"builds": handler.application.vanilla_builds[self.channel], "latest_version": handler.application.vanilla_builds[self.channel][0]}}})
+            else:
+                client = AsyncHTTPClient()
+                client.fetch('https://s3.amazonaws.com/Minecraft.Download/versions/versions.json', self.get_builds_handler, user_agent=self.user_agent)
+
+    def get_builds_handler(self, response):
+            response = json.loads(response.body)
+
+            self.handler.application.vanilla_builds = {'snapshot': [], 'release': []}
+
+            for version in response['versions']:
+                if version['type'] == "snapshot":
+                    self.handler.application.vanilla_builds['snapshot'].append(version['id'])
+                elif version['type'] == "release":
+                    self.handler.application.vanilla_builds['release'].append(version['id'])
+
+            self.handler.finish({"result": {"success": True, "message": None, "results": {"builds": self.handler.application.vanilla_builds[self.channel], "latest_version": self.handler.application.vanilla_builds[self.channel][0]}}})
+
+    @staticmethod
+    def get_streams(handler):
+            handler.finish({"result": {"results": {"values": [{"value": "release", "name": "Release"},
+                                                              {"value": "snapshot", "name": "Snapshot"}]},
+                                       "success": True,
+                                       "message": None}})
+
+    def get_build_info(self, handler): # spits it back because, unlike craftbukkit, the build ID *is* the same as the version!
+        handler.finish({"result": {"results": {"info": {"version": self.build}},
+                                   "success": True,
+                                   "message": None,
+                                   "cached": False}})
+
+    def install(self, handler, use_websocket=False ,**kwargs):
+        self.args = kwargs
+        client = AsyncHTTPClient()
+        self.handler = handler
+        self.use_websocket = use_websocket
+        self.channel = self.args['stream']
+        self.build = self.args['build']
+        self.config_location = os.path.dirname(self.handler.application.config.config_file)
+
+        self.home = self.handler.application.config.get('minecraft', 'home')
+        if os.path.exists(self.home):
+            os.system("useradd -m -s /bin/false -d %s/%s%s/ %s%s" % (self.home, self.handler.application.process_prefix, self.handler.server_id, self.handler.application.process_prefix, self.handler.server_id))
+            if self.use_websocket: self.handler.write_message({"success": True, "message": "Created new Linux user for server %s" % self.handler.server_id, "complete": False})
+            self.home = pwd.getpwnam(self.handler.application.process_prefix + str(self.handler.server_id)).pw_dir
+            if not os.path.exists(self.home):
+                os.mkdir(self.home)
+                print type(self.handler.server_id)
+                user = self.handler.application.process_prefix + str(self.handler.server_id)
+                os.chown(self.home, pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
+
+            with open(self.home + '/server.properties', 'w') as f:
+                f.write("enable-query=true\r\n")  # enable the query API to get player listings
+                f.write("server-ip=" + self.args['address'] + "\r\n")
+                f.write("server-port=" + self.args['port'] + "\r\n")
+
+            os.chown(self.home + '/server.properties', pwd.getpwnam(self.handler.application.process_prefix + str(self.handler.server_id)).pw_uid, pwd.getpwnam(self.handler.application.process_prefix + str(self.handler.server_id)).pw_gid)
+            os.chmod(self.home + '/server.properties', 0600)
+            
+            with open(self.config_location + '/vanilla_jar_cache/versions.json', 'r') as f:
+                self.versions = json.load(f)
+            
+            if self.build in self.versions['builds']:
+                shutil.copyfile(self.versions['builds'][self.build]['file'], self.home + '/minecraft.jar')
+                self._finish_install()
+            else:
+                client.fetch("https://s3.amazonaws.com/Minecraft.Download/versions/" + self.build + "/minecraft_server." + self.build + ".jar", self._vanilla_download_handler, user_agent=self.user_agent, request_timeout=99999)
+
+        else:
+            if self.use_websocket:
+                self.handler.write_message({"message": "Home directory defined in configuration is not present.", "success": False, "complete": False})
+
+    def _vanilla_download_handler(self, response):
+        if not response.error:
+            if self.use_websocket:
+                self.handler.write_message({"message": "Completed download.", "success": True, "complete": False})
+
+            with open(self.home + '/minecraft.jar', 'wb') as f:
+                f.write(response.body)
+                
+            with open(self.config_location + '/vanilla_jar_cache/%s.jar' % self.build, 'wb') as f:
+                f.write(response.body)
+
+            with open(self.config_location + '/vanilla_jar_cache/versions.json', 'w') as f:
+                self.versions['builds'][self.build] = {'file': self.config_location + '/vanilla_jar_cache/%s.jar' % self.build}
+                json.dump(self.versions, f)
+
+            self._finish_install()
+
+        else:
+            if self.use_websocket:
+                self.handler.write_message({"message": "Download failed. %s: %s" % (response.code, response.error), "success": False, "complete": False})
+
+    def _finish_install(self):
+        os.chown(self.home + '/minecraft.jar', pwd.getpwnam(self.handler.application.process_prefix + str(self.handler.server_id)).pw_uid, pwd.getpwnam(self.handler.application.process_prefix + str(self.handler.server_id)).pw_gid)
+        os.chmod(self.home + '/minecraft.jar', 0700)
+        self.handler.application.supervisor.write_program_config(self.handler.application.process_prefix + str(self.handler.server_id), os.path.dirname(self.handler.application.supervisor_config_path), self.args['memory'], self.handler.application.process_prefix + str(self.handler.server_id), self.home + '/minecraft.jar', additional_jar_options="--nojline")
+
+        if self.use_websocket:
+            self.handler.write_message({"success": True, "message": "Created supervisor config", "complete": False})
+            self.handler.write_message({"success": True, "message": "Starting server!", "complete": True})
+
+    def update(self, handler, server_id, stream, autostart=False):
+        home = '%s/%s%s/' % (handler.application.config.get('minecraft', 'home'), handler.application.process_prefix, server_id)
+        try: handler.application.supervisor.stop_process(handler.application.process_prefix + server_id)
+        except Exception as e: print e
+        os.remove(home + '/minecraft.jar')
+        config_location = os.path.dirname(handler.application.config.config_file)
+        with open(config_location + '/vanilla_jar_cache/versions.json', 'r') as f:
+            versions = json.load(f)
+        build = handler.application.vanilla_builds[stream][0]
+        if not build in versions['builds']:
+            request = urllib2.urlopen('https://s3.amazonaws.com/Minecraft.Download/versions/%s/minecraft_server.%s.jar' % (build, build))
+            with open(home + '/minecraft.jar', 'wb') as f:
+                shutil.copyfileobj(request, f)
+            shutil.copyfile(home + '/minecraft.jar', config_location + '/vanilla_jar_cache/%s.jar' % build)
+            with open(config_location + '/vanilla_jar_cache/versions.json', 'w') as f:
+                versions[build] = {"file": config_location + '/vanilla_jar_cache/%s.jar' % build}
+                json.dump(versions, f)
+            os.chmod(home + '/minecraft.jar', 0700)
+            user = handler.application.process_prefix + server_id
+            os.chown(home + '/minecraft.jar', pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
+        else:
+            shutil.copyfile(versions['builds'][build]['file'], home + '/minecraft.jar')
+            os.chmod(home + '/minecraft.jar', 0700)
+            user = handler.application.process_prefix + server_id
+            os.chown(home + '/minecraft.jar', pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
+
+        if autostart: handler.application.supervisor.start_process(handler.application.process_prefix + server_id)
 
         return True

@@ -47,4 +47,4 @@ def run_background(func, callback, args=(), kwds={}):
     _workers.apply_async(func, args, kwds, _callback)
 
 def get_cpu_percent(process):
-    return psutil.cpu_percent(interval=1) # interval of 1 seems to be most effective, however it locks this thread for a second
+    return psutil.cpu_percent(interval=0.5) # interval of 1 seems to be most effective, however it locks this thread for a second
