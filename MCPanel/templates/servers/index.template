@@ -347,7 +347,7 @@
         });
 
         var server = null;
-        var ws_socket = new WebSocket("ws://" + document.domain + "{{ reverse_url("Servers_WebSocket_CreateServer") }}");
+        var ws_socket = new WebSocket("ws://" + document.domain + ":" +  "{{ reverse_url("Servers_WebSocket_CreateServer") }}");
         $("#criticalError").hide();
         $("#craftbukkit_Form").hide();
         $("#vanilla_Form").hide();

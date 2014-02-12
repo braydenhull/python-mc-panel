@@ -13,8 +13,12 @@
 <div class="container" style="padding-top: 25px;">
     {% include "includes/server-pills.template" %}
     <div class="col-md-10">
-        <form class="form-inline">
-            <label>Lines<input class="form-control" type="number" placeholder="Lines" id="lineNum" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" value="100" style=""></label> <!-- Stackoverflow saves the day -->
+        <div class="alert alert-block alert-danger" id="criticalError">
+            <h4>Critical Error</h4>
+            <p id="errorMessage"></p>
+        </div>
+        <form class="form-inline" onsubmit="return false;">
+            <label>Lines<input class="form-control" type="number" placeholder="Lines" id="lineNum" onkeyup="if (/\D/g.test(this.value)) this.value = this.value.replace(/\D/g,'')" value="100"></label> <!-- Stackoverflow saves the day -->
             <button type="button" class="btn btn-primary" id="refreshLog">Refresh</button>
             <label><input checked="" type="checkbox" id="autoRefresh"> Auto Refresh</label>
         </form>
@@ -28,28 +32,65 @@
 </div>
 <script src="../../../static/js/jquery-2.0.3.min.js"></script>
 <script src="../../../static/js/bootstrap.min.js"></script>
+<script src="../../../static/js/jquery.cookie.js"></script>
 <script>
     $(function(){
 
-        var console = $("#console");
+        var consoleText = $("#console");
 
-        function refreshLog(nocheck){
+        function refreshLogAjax(nocheck){
             if($("#autoRefresh").prop("checked") || nocheck){
                 $.post("{{ reverse_url("Server_Ajax_GetLog", server_id) }}", {"lines": $("#lineNum").val()}).done(function(data){
                     if(data['result']['success']){
-                        console.empty().text(data['result']['log']);
-                        console.scrollTop(console[0].scrollHeight)
+                        consoleText.empty().text(data['result']['log']);
+                        consoleText.scrollTop(consoleText[0].scrollHeight)
                     } else {
-                        console.empty().text("Could not retrieve log. Error: " + data['result']['message'])
+                        consoleText.empty().text("Could not retrieve log. Error: " + data['result']['message'])
                     }
                 })
             }
         }
 
-        refreshLog(true);
+        refreshLogAjax(true);
+
+        var ws = new WebSocket("ws://" + document.domain + ":" + location.port + "{{ reverse_url('Server_WebSocket_GetLog', server_id) }}");
+        ws.onopen = function(e){
+            ws.send(JSON.stringify({
+                "action": "auth",
+                "authentication": $.cookie("session"),
+                "lines": $("#lineNum").val()
+            }));
+        };
+
+
+        ws.onmessage = function(event){
+            var message = JSON.parse(event.data);
+            if(message['success']){
+                if($("#autoRefresh").prop("checked")){
+                    consoleText.empty().text(message['log']);
+                    consoleText.scrollTop(consoleText[0].scrollHeight);
+                }
+            }
+        };
+
+        $("#lineNum").change(function(){
+            ws.send(JSON.stringify({
+                "action": "setLines",
+                "lines": this.value
+            }))
+        });
+        var criticalError = $("#criticalError");
+        criticalError.hide();
 
         function sendCommand(command){
-            $.post("{{ reverse_url("Server_Ajax_SendCommand", server_id) }}", {"command": command})
+
+            $.post("{{ reverse_url("Server_Ajax_SendCommand", server_id) }}", {"command": command}).fail(function(data){
+                criticalError.fadeIn();
+                console.log(data);
+                $("#errorMessage").text(data.responseJSON['result']['message']);
+            }).done(function(data){
+                criticalError.fadeOut();
+            })
         }
 
         $("#sendCommand").click(function(){
@@ -59,10 +100,27 @@
         });
 
         $("#refreshLog").click(function(){
-            refreshLog(true)
+            if(ws.readyState === 0 || ws.readyState === 3){
+                refreshLogAjax(true)
+            } else {
+                ws.send(JSON.stringify({
+                    "action": "getLog"
+                }))
+            }
+
         });
 
+        console.log(document);
+
         setInterval(refreshLog, 1000);
+
+        function refreshLog(){
+            if(ws.readyState === 0 || ws.readyState === 3){
+                refreshLogAjax()
+            }
+        }
+
+
 
         $("#server-id{{ server_id }}").addClass("active");
     })
