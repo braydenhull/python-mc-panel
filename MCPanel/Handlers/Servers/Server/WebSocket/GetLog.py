@@ -1,0 +1,77 @@
+__author__ = 'brayden'
+
+from Base import BaseServerWebSocketHandler
+import json
+from peewee import DoesNotExist
+import tornado.escape
+import os
+import subprocess
+import tornado.ioloop
+from tornado.websocket import WebSocketClosedError
+
+
+class GetLogHandler(BaseServerWebSocketHandler):
+    def open(self, server_id):
+        self.server_id = server_id
+        self.callback = None
+        self.auth = False
+
+    def on_message(self, message):
+        try:
+            message = json.loads(message)
+            username = None
+            self.callback = None
+            if message['action'] == "auth":
+                session = tornado.escape.url_unescape(message['authentication'])
+                if len(session.split('|')) == 2:
+                    username = (((session.split('|')[0])).decode('hex').decode('utf-8')).strip()
+                    hash = session.split('|')[1]
+                    try:
+                        if self.application.check_session(username, hash):
+                            if self.application.db.getServer(self.server_id).Owner == username or self.application.db.isUserAdmin(username):
+                                self.auth = True
+                            else:
+                                self.write_message({"success": False, "message": "Required permissions not present."})
+                        else:
+                            self.write_message({"success": False, "message": "Bad authentication."})
+                    except DoesNotExist:
+                        self.write_message({'success': False, "message": "Bad authentication."})
+                else:
+                    self.write_message({'success': False, "message": "Bad authentication"})
+
+                if self.auth:
+                    self.filename = '/var/log/minecraft/%s%s.log' % (self.application.process_prefix, self.server_id)
+                    self.mtime = os.path.getmtime(self.filename)
+                    self.lines = message['lines']
+                    self.callback = tornado.ioloop.PeriodicCallback(self.check_log, 250).start()
+
+            elif message['action'] == "setLines":
+                if self.auth:
+                    self.lines = message['lines']
+                else:
+                    self.write_message({"success": False, "message": "Please authenticate first."})
+
+            elif message['action'] == "getLog":
+                if self.auth:
+                    self.write_message({"success": True, "message": None, "log": (subprocess.check_output(['tail', '-n', str(self.lines), self.filename], shell=False))})
+                else:
+                    self.write_message({"success": False, "message": "Please authenticate first."})
+
+            else:
+                self.write_message({"success": False, "message": "Unrecognised action"})
+
+        except ValueError or KeyError:
+            self.write_message({"success": False, "message": "Not well formatted message."})
+
+    def check_log(self):
+        mtime = os.path.getmtime(self.filename)
+        if mtime > self.mtime:
+            self.mtime = mtime
+            try:
+                self.write_message({"success": True, "message": None, "log": (subprocess.check_output(['tail', '-n', str(self.lines), self.filename], shell=False))})
+            except WebSocketClosedError:
+                pass # for some insane reason I'm getting this when it's literally impossible. Might investigate further later, seems to be working regardless.
+
+    def on_close(self):
+        if not self.callback is None:
+            self.callback.stop()
