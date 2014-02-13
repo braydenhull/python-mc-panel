@@ -13,14 +13,12 @@ from tornado.websocket import WebSocketClosedError
 class GetLogHandler(BaseServerWebSocketHandler):
     def open(self, server_id):
         self.server_id = server_id
-        self.callback = None
         self.auth = False
 
     def on_message(self, message):
         try:
             message = json.loads(message)
             username = None
-            self.callback = None
             if message['action'] == "auth":
                 session = tornado.escape.url_unescape(message['authentication'])
                 if len(session.split('|')) == 2:
@@ -43,7 +41,8 @@ class GetLogHandler(BaseServerWebSocketHandler):
                     self.filename = '/var/log/minecraft/%s%s.log' % (self.application.process_prefix, self.server_id)
                     self.mtime = os.path.getmtime(self.filename)
                     self.lines = message['lines']
-                    self.callback = tornado.ioloop.PeriodicCallback(self.check_log, 250).start()
+                    self.callback = tornado.ioloop.PeriodicCallback(self.check_log, 250)
+                    self.callback.start()
 
             elif message['action'] == "setLines":
                 if self.auth:
@@ -67,11 +66,7 @@ class GetLogHandler(BaseServerWebSocketHandler):
         mtime = os.path.getmtime(self.filename)
         if mtime > self.mtime:
             self.mtime = mtime
-            try:
-                self.write_message({"success": True, "message": None, "log": (subprocess.check_output(['tail', '-n', str(self.lines), self.filename], shell=False))})
-            except WebSocketClosedError:
-                pass # for some insane reason I'm getting this when it's literally impossible. Might investigate further later, seems to be working regardless.
+            self.write_message({"success": True, "message": None, "log": (subprocess.check_output(['tail', '-n', str(self.lines), self.filename], shell=False))})
 
     def on_close(self):
-        if not self.callback is None:
-            self.callback.stop()
+        self.callback.stop()
