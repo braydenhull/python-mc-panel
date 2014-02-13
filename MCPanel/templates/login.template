@@ -60,7 +60,7 @@
         <button id="loginButton" onclick="return false;" class="btn btn-lg btn-primary btn-block" type="submit">Login</button>
     </form>
 </div>
-<script src="../static/js/jquery-2.0.3.min.js"></script>
+<script src="../static/js/jquery.min.js"></script>
 <script src="../static/js/bootstrap.min.js"></script>
 <script src="../static/js/jquery.cookie.js"></script>
 <script>

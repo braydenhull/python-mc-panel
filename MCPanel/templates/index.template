@@ -12,7 +12,7 @@
 <div class="container">
     <h1>This is a test page.</h1>
 </div>
-<script src="../static/js/jquery-2.0.3.min.js"></script>
+<script src="../static/js/jquery.min.js"></script>
 <script src="../static/js/bootstrap.min.js"></script>
 {% include "includes/footer.template" %}
 </body>
