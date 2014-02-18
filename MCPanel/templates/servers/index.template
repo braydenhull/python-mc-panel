@@ -104,7 +104,7 @@
                                 </label>
                                 <label id="serverPortLabel">
                                     Server Port
-                                    <input class="form-control" type="number" id="serverPort">
+                                    <input style="width: 100px;" class="form-control" type="number" id="serverPort">
                                 </label>
                             </div>
 
@@ -335,7 +335,6 @@
         $("#deleteServerModalConfirm").removeAttr('disabled'); // for some reason it is disabled on page load in some circumstances
 
         $("#deleteServerModalConfirm").click(function(){
-            console.log("test");
             if(!$("#deleteServerModalConfirm").prop('disabled')){
                 $("#deleteServerModalConfirm").addClass('disabled').attr('disabled', '');
                 $.post('{{ reverse_url('Servers_DeleteServer') }}', {'server_id': $("#deleteServerModalServerID").val()}).done(function(data){
@@ -347,7 +346,7 @@
         });
 
         var server = null;
-        var ws_socket = new WebSocket("ws://" + document.domain + ":" +  "{{ reverse_url("Servers_WebSocket_CreateServer") }}");
+        var ws_socket = new WebSocket("ws://" + document.domain + ":" + location.port + "{{ reverse_url("Servers_WebSocket_CreateServer") }}");
         $("#criticalError").hide();
         $("#craftbukkit_Form").hide();
         $("#vanilla_Form").hide();

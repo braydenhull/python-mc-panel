@@ -61,6 +61,19 @@ class Database():
             class Meta:
                 database = self.database
 
+        class Backup_Destinations(Model):
+            ID = PrimaryKeyField()
+            FriendlyName = CharField(max_length=255, null=False, unique=False)
+            Type = CharField(max_length=128, null=False) # The method used for backing, e.g.: zip, rdiff-backup etc.
+            Folder = TextField(null=False) # if local then local folder, remote then remote folder etc.
+            Host = CharField(max_length=255, null=True, default=None) # if remote, then this is the host to use, as defined in ~/.ssh/config, which will contain private key, public key, hostname, port etc.
+            # private key is required for passwordless authentication, passwords are a bad idea and NOT supported.
+            Remote = BooleanField(null=False, default=False)
+
+            class Meta:
+                database = self.database
+
+
         class Roles(Model):  # Stores role name and ID used to reference it later
             ID = PrimaryKeyField()
             RoleName = CharField(null=False, max_length=128)
@@ -105,6 +118,7 @@ class Database():
         self.Permissions = Permissions
         self.Role_Permissions = Role_Permissions
         self.User_Roles = User_Roles
+        self.Backup_Destinations = Backup_Destinations
 
         if create_db:
             self.initialiseDatabase()
@@ -118,6 +132,7 @@ class Database():
         self.Permissions.create_table(True)
         self.Role_Permissions.create_table(True)
         self.User_Roles.create_table(True)
+        self.Backup_Destinations(True)
 
     def addUser(self, username, password, is_admin=False):
         password = passlib.hash.sha1_crypt.encrypt(password, rounds=self.rounds)
