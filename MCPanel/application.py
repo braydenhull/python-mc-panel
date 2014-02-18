@@ -131,7 +131,7 @@ class Application(tornado.web.Application):
     def make_session(self, username):
         session = hashlib.sha256(os.urandom(32)).hexdigest()
         self.session_cache[username] = session
-        self.db.insertSession(username, session)
+        self.db.insert_session(username, session)
         return session
 
     def check_session(self, username, session):
@@ -141,7 +141,7 @@ class Application(tornado.web.Application):
             else:
                 return False
         else:  # not cached, due to daemon restart? fallback onto more expensive method
-            if self.db.getSession(username) == session:
+            if self.db.get_session(username) == session:
                 self.session_cache[username] = session  # push it into the cache
                 return True
             else:
@@ -151,7 +151,7 @@ class Application(tornado.web.Application):
         self.db.ping()
 
     def generate_username_cache(self):
-        users = self.db.getUsers()
+        users = self.db.get_users()
         for user in users:
             self.usernames[user.Username] = {'Is_Admin': user.Is_Admin}
 

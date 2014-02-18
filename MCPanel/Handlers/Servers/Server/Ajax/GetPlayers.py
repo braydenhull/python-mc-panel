@@ -17,7 +17,7 @@ class GetPlayersHandler(BaseServerAjaxHandler):
     def post(self, server_id):
         server_id = str(server_id)
         if self.application.supervisor.is_process_running(self.application.process_prefix + server_id):
-            self.server = self.application.db.getServer(server_id)
+            self.server = self.application.db.get_server(server_id)
             run_background(run_query, self.on_complete, (self.server.Address, self.server.Port,))
         else:
             self.finish({"result": {"success": False, "message": "Server is not running", "max_players": None, "current_players": None, "players": []}})

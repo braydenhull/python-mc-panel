@@ -34,8 +34,8 @@ class GetProcessInfoHandler(BaseServerAjaxHandler):
                 "process_create_time": round(self.process.create_time, 0),
                 "current_time": round(time.time(), 0),
                 "current_memory_percent": round(self.process.get_memory_percent(), 0),
-                "memory_allocation_percent": round(100 * (self.application.db.getServer(self.server_id).Memory * 1024) / (psutil.virtual_memory().total / 1024), 0),
-                "current_memory_as_percentage_of_allocation": round(100 * (self.process.get_memory_info().rss / 1024 / 1024) / self.application.db.getServer(self.server_id).Memory, 0)
+                "memory_allocation_percent": round(100 * (self.application.db.get_server(self.server_id).Memory * 1024) / (psutil.virtual_memory().total / 1024), 0),
+                "current_memory_as_percentage_of_allocation": round(100 * (self.process.get_memory_info().rss / 1024 / 1024) / self.application.db.get_server(self.server_id).Memory, 0)
 
             }
         }})

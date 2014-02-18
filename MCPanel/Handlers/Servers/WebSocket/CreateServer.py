@@ -24,7 +24,7 @@ class CreateServerHandler(BaseWebSocketHandler):
                 hash = session.split('|')[1]
                 try:
                     if self.application.check_session(username, hash):
-                        if self.application.db.isUserAdmin(username):
+                        if self.application.db.is_user_admin(username):
                             auth = True  # so much nesting!
                         else:
                             self.write_message({"success": False, "message": "Required permissions not present.", "complete": False})
@@ -42,10 +42,10 @@ class CreateServerHandler(BaseWebSocketHandler):
                 server_type = message['params']['type']
                 owner = message['owner']
                 stream = message['params']['stream']
-                if not self.application.db.isAddressTaken(address, port):
-                    self.application.db.addServer(address, port, memory, owner, stream, server_type=server_type)
+                if not self.application.db.is_address_taken(address, port):
+                    self.application.db.add_server(address, port, memory, owner, stream, server_type=server_type)
                     self.write_message({"success": True, "message": "Added server to database.", "complete": False})
-                    server_id = self.application.db.getServerID(address, port)
+                    server_id = self.application.db.get_server_id(address, port)
                     self.server_id = server_id
                     self.write_message({"success": True, "message": "Verified database entry, got ID %s" % server_id, "complete": False})
                     if server_type == "craftbukkit":

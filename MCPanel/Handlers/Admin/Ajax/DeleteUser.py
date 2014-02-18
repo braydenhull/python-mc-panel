@@ -11,7 +11,7 @@ class DeleteUserHandler(BaseAdminAjaxHandler):
     def post(self):
         if 'user' in self.request.arguments:
             try:
-                self.application.db.deleteUser(self.get_argument('user'))
+                self.application.db.delete_user(self.get_argument('user'))
                 self.application.generate_username_cache()
                 self.finish({'result': {'success': True, 'message': 'User was successfully removed.'}})
             except Exception as e:

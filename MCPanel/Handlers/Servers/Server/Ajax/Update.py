@@ -18,7 +18,7 @@ class UpdateServerHandler(BaseServerAjaxHandler):
     def post(self, server_id):
         if 'autostart' in self.request.arguments:
             autostart = True if self.get_argument('autostart') == 'true' else False
-            self.server = self.application.db.getServer(server_id)
+            self.server = self.application.db.get_server(server_id)
             if self.server.Type == "craftbukkit":
                 run_background(run_bukkit_update, self.on_complete, (self.server.Stream, server_id, self, autostart,))
             elif self.server.Type == "vanilla":

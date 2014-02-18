@@ -27,13 +27,13 @@ class BaseHandler(tornado.web.RequestHandler):
             'title': self.application.title,
             'name': self.application.name,
             'process_prefix': self.application.process_prefix,
-            'servers': self.application.db.getServers(),
+            'servers': self.application.db.get_servers(),
         })
         return ns
 
     def if_admin(self):
         try:
-            if not self.application.db.isUserAdmin(self.current_user):
+            if not self.application.db.is_user_admin(self.current_user):
                 raise HTTPError(403)
         except DoesNotExist as e:
             raise HTTPError(403)
@@ -41,8 +41,8 @@ class BaseHandler(tornado.web.RequestHandler):
     def can_view_server(self, server_id):
         if self.current_user in self.application.usernames:
             try:
-                if not self.application.db.isUserAdmin(self.current_user):
-                    if not self.application.db.getServer(server_id).Owner == self.current_user:
+                if not self.application.db.is_user_admin(self.current_user):
+                    if not self.application.db.get_server(server_id).Owner == self.current_user:
                         raise HTTPError(403)
             except DoesNotExist:
                 raise HTTPError(403)

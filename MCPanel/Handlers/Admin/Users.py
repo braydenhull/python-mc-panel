@@ -10,4 +10,4 @@ class AdminUsers(BaseAdminHandler):
     @authenticated
     def get(self):
         self.render(self.application.settings['template_path'] + '/admin/users.template',
-                    users=self.application.db.getUsers())
+                    users=self.application.db.get_users())

@@ -15,7 +15,7 @@ class AddUserHandler(BaseAdminAjaxHandler):
                     is_admin = True
                 else:
                     is_admin = False
-                self.application.db.addUser(self.get_argument('username'), self.get_argument('password'),
+                self.application.db.add_user(self.get_argument('username'), self.get_argument('password'),
                                             is_admin=is_admin)
                 self.application.generate_username_cache()
                 self.finish({'result': {'success': True, 'message': 'User was successfully created.'}})

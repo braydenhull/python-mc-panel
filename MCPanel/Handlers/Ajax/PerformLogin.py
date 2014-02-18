@@ -14,7 +14,7 @@ class PerformLoginHandler(BaseAjaxHandler):
                 self.finish({'result': {'success': False, 'message': 'Username/Password is incorrect.'}})
             else:
                 try:
-                    if self.application.db.checkCredentials(self.get_argument('username'), self.get_argument('password')):
+                    if self.application.db.check_credentials(self.get_argument('username'), self.get_argument('password')):
                         cookie_value =  (self.get_argument('username').encode('utf-8')).encode('hex') + '|' + self.application.make_session(
                             self.get_argument('username'))
                         self.set_cookie('session', cookie_value, expires_days=int(self.get_argument('expires')), path='/')

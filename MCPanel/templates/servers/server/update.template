@@ -22,7 +22,7 @@
         </form>
         <p id="message" class="text-success"></p>
 
-        {% set server = handler.application.db.getServer(server_id) %}
+        {% set server = handler.application.db.get_server(server_id) %}
     </div>
 </div>
 <script src="../../../static/js/jquery.min.js"></script>

@@ -122,7 +122,7 @@ class Database():
 
         if create_db:
             self.initialiseDatabase()
-            self.addUser('Admin', 'admin', True)
+            self.add_user('Admin', 'admin', True)
             print "Database initialised. Login is: \r\nUsername: Admin\r\nPassword: admin"
 
     def initialiseDatabase(self):  # if param is true it'll suppress errors
@@ -134,30 +134,30 @@ class Database():
         self.User_Roles.create_table(True)
         self.Backup_Destinations(True)
 
-    def addUser(self, username, password, is_admin=False):
+    def add_user(self, username, password, is_admin=False):
         password = passlib.hash.sha1_crypt.encrypt(password, rounds=self.rounds)
         self.Users.create(Username=escape.xhtml_escape(username), Password=password, Is_Admin=is_admin, force_insert=True)
 
-    def addServer(self, address, port, memory, owner, stream, server_type="craftbukkit"):
+    def add_server(self, address, port, memory, owner, stream, server_type="craftbukkit"):
         self.Servers.create(Address=address, Port=port, Memory=memory, Owner=owner, ServerJar='minecraft.jar', Type=server_type, Stream=stream, Is_Active=True)
 
-    def getServers(self):
+    def get_servers(self):
         return self.Servers.select().where(self.Servers.Is_Active == True)
 
-    def getServer(self, server_id):
+    def get_server(self, server_id):
         return self.Servers.select().where(self.Servers.ID == server_id, self.Servers.Is_Active == True).get()
 
-    def serverExists(self, server_id):
+    def server_exists(self, server_id):
         try:
             self.Servers.select().where(self.Servers.ID == server_id, self.Servers.Is_Active == True).get()
             return True
         except DoesNotExist:
             return False
 
-    def getServerID(self, address, port):
+    def get_server_id(self, address, port):
         return self.Servers.select().where(self.Servers.Address == address, self.Servers.Port == port, self.Servers.Is_Active == True).get().ID
 
-    def isAddressTaken(self, address, port):
+    def is_address_taken(self, address, port):
         try:
             if address == '0.0.0.0':
                 self.Servers.select().where(self.Servers.Port == port, self.Servers.Is_Active == True).get()
@@ -167,47 +167,47 @@ class Database():
         except DoesNotExist:
             return False
 
-    def insertSession(self, username, session):
+    def insert_session(self, username, session):
         self.Users.update(Session=session).where(self.Users.Username == username).execute()
 
     def ping(self):
         self.database.execute_sql('/* ping */ SELECT 1')  # Ping the database
 
-    def getSession(self, username):
+    def get_session(self, username):
         return self.Users.select(self.Users.Session).where(self.Users.Username == username).get().Session
 
-    def checkCredentials(self, username, password):
+    def check_credentials(self, username, password):
         passwordHash = self.Users.select(self.Users.Password).where(self.Users.Username == username).get().Password
         return passlib.hash.sha1_crypt.verify(password, passwordHash)
 
-    def addRole(self, roleName):
-        self.Roles.create(RoleName=roleName)
+    def add_role(self, role_name):
+        self.Roles.create(RoleName=role_name)
 
-    def assignPermToRole(self, perm_id, role_id):
+    def assign_perm_to_role(self, perm_id, role_id):
         self.Role_Permissions.create(Role_ID=role_id, Permission_ID=perm_id)
 
-    def assignUserToRole(self, user, role_id):
+    def assign_user_to_role(self, user, role_id):
         self.User_Roles.update(Role_ID=role_id, User_ID=user).execute()
 
-    def getRoles(self):
+    def get_roles(self):
         return self.Roles.select()
 
-    def getRolePermissions(self, roleId):
-        return self.Role_Permissions().where(self.Role_Permissions.Role_ID == roleId).get()
+    def get_role_permissions(self, role_id):
+        return self.Role_Permissions().where(self.Role_Permissions.Role_ID == role_id).get()
 
-    def isUserAdmin(self, user):
+    def is_user_admin(self, user):
         return self.Users.select(self.Users.Is_Admin).where(self.Users.Username == user).get().Is_Admin
 
-    def getUsers(self):
+    def get_users(self):
         return self.Users.select()
 
-    def deleteUser(self, user):
+    def delete_user(self, user):
         (self.Users.get(self.Users.Username == user)).delete_instance()
 
-    def deleteServer(self, server_id):
+    def delete_server(self, server_id):
         self.Servers.update(Is_Active = False).where(self.Servers.ID == server_id).execute()
 
-    def editUser(self, username, password=None, api_key=None, session=None, is_admin=None):
+    def edit_user(self, username, password=None, api_key=None, session=None, is_admin=None):
         user = self.Users()
         user.Username = username
         if type(password) is unicode:
@@ -221,5 +221,5 @@ class Database():
 
         user.save()
 
-    def changePassword(self, username, new_password):
+    def change_password(self, username, new_password):
         self.Users.update(Password=passlib.hash.sha1_crypt.encrypt(new_password, rounds=self.rounds)).where(self.Users.Username == username).execute()

@@ -18,14 +18,14 @@ class DeleteServerHandler(BaseServersAjaxHandler):
     def post(self):
         self.if_admin() # admin only function
         try:
-            server = self.application.db.getServer(int(self.get_argument('server_id')))
+            server = self.application.db.get_server(int(self.get_argument('server_id')))
             if server.Type == "craftbukkit" or server.Type == "vanilla":
                 run_background(craftbukkit_delete, self.on_complete, (self.get_argument('server_id'), self.application,))
         except DoesNotExist:
             self.finish({'result': {'success': False, 'message': 'server_id does not exist'}})
 
     def on_complete(self, result):
-        self.application.db.deleteServer(self.get_argument('server_id')) # cannot do this in the thread
+        self.application.db.delete_server(self.get_argument('server_id')) # cannot do this in the thread
         self.finish({"result": {"success": result, "message": None}})
 
 def run_background(func, callback, args=(), kwds={}):

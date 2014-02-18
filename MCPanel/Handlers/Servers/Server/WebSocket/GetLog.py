@@ -26,7 +26,7 @@ class GetLogHandler(BaseServerWebSocketHandler):
                     hash = session.split('|')[1]
                     try:
                         if self.application.check_session(username, hash):
-                            if self.application.db.getServer(self.server_id).Owner == username or self.application.db.isUserAdmin(username):
+                            if self.application.db.get_server(self.server_id).Owner == username or self.application.db.is_user_admin(username):
                                 self.auth = True
                             else:
                                 self.write_message({"success": False, "message": "Required permissions not present."})

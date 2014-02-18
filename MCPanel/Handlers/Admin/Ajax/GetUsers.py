@@ -10,7 +10,7 @@ class GetUserHandler(BaseAdminAjaxHandler):
     @authenticated
     def post(self):
         result = {"result": {'users': []}}
-        for user in self.application.db.getUsers():
+        for user in self.application.db.get_users():
             result['result']['users'].append({'username': user.Username, 'is_admin': user.Is_Admin})
         result['result']['success'] = True
         result['result']['message'] = None
