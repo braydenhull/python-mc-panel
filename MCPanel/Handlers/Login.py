@@ -1,7 +1,7 @@
 __author__ = 'brayden'
 
 from tornado.web import asynchronous
-from Base import BaseHandler
+from Handlers.Base import BaseHandler
 
 
 class LoginHandler(BaseHandler):

@@ -1,13 +1,13 @@
 __author__ = 'brayden'
 
-from Base import BaseServerWebSocketHandler
+from Handlers.Servers.Server.WebSocket.Base import BaseServerWebSocketHandler
 import json
 from peewee import DoesNotExist
 import tornado.escape
 import os
 import subprocess
 import tornado.ioloop
-from tornado.websocket import WebSocketClosedError
+import binascii
 
 
 class GetLogHandler(BaseServerWebSocketHandler):
@@ -22,7 +22,7 @@ class GetLogHandler(BaseServerWebSocketHandler):
             if message['action'] == "auth":
                 session = tornado.escape.url_unescape(message['authentication'])
                 if len(session.split('|')) == 2:
-                    username = (((session.split('|')[0])).decode('hex').decode('utf-8')).strip()
+                    username = binascii.unhexlify((session.split('|')[0])).strip()
                     hash = session.split('|')[1]
                     try:
                         if self.application.check_session(username, hash):
@@ -38,7 +38,7 @@ class GetLogHandler(BaseServerWebSocketHandler):
                     self.write_message({'success': False, "message": "Bad authentication"})
 
                 if self.auth:
-                    self.filename = '/var/log/minecraft/%s%s.log' % (self.application.process_prefix, self.server_id)
+                    self.filename = '/var/log/minecraft/%s%s.log' % (self.application.process_prefix, self.server_id.decode())
                     self.mtime = os.path.getmtime(self.filename)
                     self.lines = message['lines']
                     self.callback = tornado.ioloop.PeriodicCallback(self.check_log, 250)
@@ -52,7 +52,7 @@ class GetLogHandler(BaseServerWebSocketHandler):
 
             elif message['action'] == "getLog":
                 if self.auth:
-                    self.write_message({"success": True, "message": None, "log": (subprocess.check_output(['tail', '-n', str(self.lines), self.filename], shell=False))})
+                    self.write_message({"success": True, "message": None, "log": (subprocess.check_output(['tail', '-n', str(self.lines), self.filename], shell=False)).decode()})
                 else:
                     self.write_message({"success": False, "message": "Please authenticate first."})
 
@@ -66,7 +66,7 @@ class GetLogHandler(BaseServerWebSocketHandler):
         mtime = os.path.getmtime(self.filename)
         if mtime > self.mtime:
             self.mtime = mtime
-            self.write_message({"success": True, "message": None, "log": (subprocess.check_output(['tail', '-n', str(self.lines), self.filename], shell=False))})
+            self.write_message({"success": True, "message": None, "log": (subprocess.check_output(['tail', '-n', str(self.lines), self.filename], shell=False)).decode()})
 
     def on_close(self):
         self.callback.stop()

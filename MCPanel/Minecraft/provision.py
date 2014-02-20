@@ -1,14 +1,13 @@
 __author__ = 'brayden'
 
 import json
-from urllib2 import HTTPError
-import urllib2
+import requests
 from tornado.httpclient import AsyncHTTPClient
 import os
 import pwd
 import shutil
 import subprocess
-from tornado import gen
+from requests import HTTPError
 
 
 class Bukkit:
@@ -21,10 +20,8 @@ class Bukkit:
         self.channel = channel
         self.build = build
         self.user_agent = 'python-mc-panel/0.1-dev'
-        self.opener = urllib2.build_opener()
-        self.opener.addheaders = [{'User-Agent', self.user_agent}]
+        self.headers = {"User-Agent": self.user_agent}
         self.client = AsyncHTTPClient()
-        urllib2.install_opener(self.opener)
 
     class BukkitProvisionError(Exception):
         def __init__(self, message, name):
@@ -41,19 +38,19 @@ class Bukkit:
             if just_url:
                 return 'http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/view/latest/?_accept=application%2Fjson'
             else:
-                request = urllib2.Request('http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/view/latest/?_accept=application%2Fjson')
+                request = requests.get('http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/view/latest/?_accept=application%2Fjson', headers=self.headers)
         else:
             try:
                 if just_url:
                     return 'http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/view/build-' + str(self.build) + '/?_accept=application%2Fjson'
                 else:
-                    request = urllib2.Request('http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/view/build-' + str(self.build) + '/?_accept=application%2Fjson')
+                    request = requests.get('http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/view/build-' + str(self.build) + '/?_accept=application%2Fjson', headers=self.headers)
             except HTTPError as e:
                 if e.code == 404:
                     raise self.BukkitProvisionError("Build number not found.", "UnknownBuild")
                 else:
                     raise self.BukkitProvisionError("Some HTTPError occurred: %s" % e, "UnknownHTTPError")
-        result = json.loads(urllib2.urlopen(request).read())
+        result = request.json()
 
         if result['is_broken']:
             raise self.BukkitProvisionError(result['broken_reason'], "BrokenBuild")
@@ -66,9 +63,8 @@ class Bukkit:
         if just_url:
             return 'http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/artifacts/' +  self.channel + '/?_accept=application%2Fjson&page=' + str(page)
         else:
-            request = urllib2.Request('http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/artifacts/' +  self.channel + '/?_accept=application%2Fjson&page=' + str(page))
-        result = urllib2.urlopen(request).read()
-        result = json.loads(result)
+            request = requests.get('http://dl.bukkit.org/api/1.0/downloads/projects/craftbukkit/artifacts/' +  self.channel + '/?_accept=application%2Fjson&page=' + str(page), headers=self.headers)
+        result = request.json()
         if result['results'] == 0:
             raise self.BukkitProvisionError("%s not recognised as a valid channel." % self.channel, "InvalidChannel Name")
 
@@ -92,7 +88,7 @@ class Bukkit:
             self.home = pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_dir
             if not os.path.exists(self.home):
                 os.mkdir(self.home)
-                print type(self.ws.server_id)
+                print(type(self.ws.server_id))
                 user = self.ws.application.process_prefix + str(self.ws.server_id)
                 os.chown(self.home, pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
 
@@ -100,7 +96,7 @@ class Bukkit:
                 f.write("enable-query=true")  # enable the query API to get player listings
 
             os.chown(self.home + '/server.properties', pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_uid, pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_gid)
-            os.chmod(self.home + '/server.properties', 0600)
+            os.chmod(self.home + '/server.properties', 0o600)
 
             with open(os.path.dirname(self.ws.application.config.config_file) + '/bukkit_jar_cache/versions.json', 'r') as f:
                 self.versions = json.load(f)
@@ -143,14 +139,16 @@ class Bukkit:
         config_location = os.path.dirname(handler.application.config.config_file)
         home = '%s/%s%s/' % (handler.application.config.get('minecraft', 'home'), handler.application.process_prefix, server_id)
         try: handler.application.supervisor.stop_process(handler.application.process_prefix + server_id)
-        except Exception as e: print e
+        except Exception as e:
+            print(e)
         try: os.remove(home + '/minecraft.jar')
-        except Exception as e: print e
+        except Exception as e:
+            print(e)
         build_info = self._get_build_info()
         build = str(build_info['build_number'])
         with open(os.path.dirname(handler.application.config.config_file) + '/bukkit_jar_cache/versions.json', 'r') as f:
             versions = json.load(f)
-        print versions
+        print(versions)
         if not str(build) in versions['builds']:
             request = urllib2.urlopen('http://dl.bukkit.org' + build_info['file']['url'])
             with open(home + '/minecraft.jar', 'wb') as f:
@@ -159,12 +157,12 @@ class Bukkit:
             with open(config_location + '/bukkit_jar_cache/versions.json', 'w') as f:
                 versions['builds'][build] = {"file": config_location + '/bukkit_jar_cache/%s.jar' % build}
                 json.dump(versions, f)
-            os.chmod(home + '/minecraft.jar', 0700)
+            os.chmod(home + '/minecraft.jar', 0o700)
             user = handler.application.process_prefix + server_id
             os.chown(home + '/minecraft.jar', pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
         else:
             shutil.copyfile(versions['builds'][build]['file'], home + '/minecraft.jar')
-            os.chmod(home + '/minecraft.jar', 0700)
+            os.chmod(home + '/minecraft.jar', 0o700)
             user = handler.application.process_prefix + server_id
             os.chown(home + '/minecraft.jar', pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
         if autostart:
@@ -174,7 +172,7 @@ class Bukkit:
 
     def _finish_install(self):
         os.chown(self.home + '/minecraft.jar', pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_uid, pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_gid)
-        os.chmod(self.home + '/minecraft.jar', 0700)
+        os.chmod(self.home + '/minecraft.jar', 0o700)
         self.ws.application.supervisor.write_program_config(self.ws.application.process_prefix + str(self.ws.server_id), os.path.dirname(self.ws.application.supervisor_config_path), self.args['memory'], self.ws.application.process_prefix + str(self.ws.server_id), self.home + '/minecraft.jar', additional_jar_options="--nojline --server-ip %s --server-port %s" % (self.args['address'], self.args['port']))
         self.ws.write_message({"success": True, "message": "Created supervisor config", "complete": False})
         self.ws.write_message({"success": True, "message": "Starting server!", "complete": True})
@@ -230,38 +228,38 @@ class Bukkit:
                 pass
             os.remove(os.path.dirname(application.supervisor_config_path) + '/conf.d/%s%s.conf' % (application.process_prefix, server_id))
         except OSError as e:
-            print "Failed to remove supervisord config for server %s. Error %s" % (server_id, e)
+            print("Failed to remove supervisord config for server %s. Error %s" % (server_id, e))
 
         try:
             application.supervisor.server.supervisor.clearProcessLogs(application.process_prefix + server_id)
         except Exception as e:
-            print "Failed to remove process logs for server %s. Error: %s" % (server_id, e)
+            print("Failed to remove process logs for server %s. Error: %s" % (server_id, e))
 
         try:
             with open('/var/log/minecraft/%s%s.log' % (application.process_prefix, server_id), 'w') as f:
                 f.write('')  # clear log
         except IOError as e:
-            print "Failed to blank out log for server %s. Error %s" % (server_id, e)
+            print("Failed to blank out log for server %s. Error %s" % (server_id, e))
 
         try:
             application.supervisor.server.supervisor.removeProcessGroup(application.process_prefix + server_id)
         except Exception as e:
-            print "Failed to remove process group from supervisord for sever %s. Error: %s." % (server_id, e)
+            print("Failed to remove process group from supervisord for sever %s. Error: %s." % (server_id, e))
 
         try:
             application.supervisor.server.supervisor.reloadConfig()
         except Exception as e:
-            print "Failed to reload config for supervisord from server %s. Error: %s" % (server_id, e)
+            print("Failed to reload config for supervisord from server %s. Error: %s" % (server_id, e))
 
         try:
             shutil.rmtree(application.config.get('minecraft', 'home') + '/%s%s/' % (application.process_prefix, server_id))
         except OSError as e:
-            print "Failed to remove home directory for server %s. Error: %s" % (server_id, e)
+            print("Failed to remove home directory for server %s. Error: %s" % (server_id, e))
 
         try:
             subprocess.Popen(['userdel', '%s%s' % (application.process_prefix, server_id)], shell=False)
         except OSError as e:
-            print "Failed to remove Linux user for server %s. Error: %s" % (server_id, e)
+            print("Failed to remove Linux user for server %s. Error: %s" % (server_id, e))
 
         return True
 
@@ -331,7 +329,6 @@ class Vanilla:
             self.home = pwd.getpwnam(self.handler.application.process_prefix + str(self.handler.server_id)).pw_dir
             if not os.path.exists(self.home):
                 os.mkdir(self.home)
-                print type(self.handler.server_id)
                 user = self.handler.application.process_prefix + str(self.handler.server_id)
                 os.chown(self.home, pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
 
@@ -341,7 +338,7 @@ class Vanilla:
                 f.write("server-port=" + self.args['port'] + "\r\n")
 
             os.chown(self.home + '/server.properties', pwd.getpwnam(self.handler.application.process_prefix + str(self.handler.server_id)).pw_uid, pwd.getpwnam(self.handler.application.process_prefix + str(self.handler.server_id)).pw_gid)
-            os.chmod(self.home + '/server.properties', 0600)
+            os.chmod(self.home + '/server.properties', 0o600)
             
             with open(self.config_location + '/vanilla_jar_cache/versions.json', 'r') as f:
                 self.versions = json.load(f)
@@ -379,7 +376,7 @@ class Vanilla:
 
     def _finish_install(self):
         os.chown(self.home + '/minecraft.jar', pwd.getpwnam(self.handler.application.process_prefix + str(self.handler.server_id)).pw_uid, pwd.getpwnam(self.handler.application.process_prefix + str(self.handler.server_id)).pw_gid)
-        os.chmod(self.home + '/minecraft.jar', 0700)
+        os.chmod(self.home + '/minecraft.jar', 0o700)
         self.handler.application.supervisor.write_program_config(self.handler.application.process_prefix + str(self.handler.server_id), os.path.dirname(self.handler.application.supervisor_config_path), self.args['memory'], self.handler.application.process_prefix + str(self.handler.server_id), self.home + '/minecraft.jar', additional_jar_options="--nojline")
 
         if self.use_websocket:
@@ -389,7 +386,7 @@ class Vanilla:
     def update(self, handler, server_id, stream, autostart=False):
         home = '%s/%s%s/' % (handler.application.config.get('minecraft', 'home'), handler.application.process_prefix, server_id)
         try: handler.application.supervisor.stop_process(handler.application.process_prefix + server_id)
-        except Exception as e: print e
+        except Exception as e: print(e)
         os.remove(home + '/minecraft.jar')
         config_location = os.path.dirname(handler.application.config.config_file)
         with open(config_location + '/vanilla_jar_cache/versions.json', 'r') as f:
@@ -403,12 +400,12 @@ class Vanilla:
             with open(config_location + '/vanilla_jar_cache/versions.json', 'w') as f:
                 versions[build] = {"file": config_location + '/vanilla_jar_cache/%s.jar' % build}
                 json.dump(versions, f)
-            os.chmod(home + '/minecraft.jar', 0700)
+            os.chmod(home + '/minecraft.jar', 0o700)
             user = handler.application.process_prefix + server_id
             os.chown(home + '/minecraft.jar', pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
         else:
             shutil.copyfile(versions['builds'][build]['file'], home + '/minecraft.jar')
-            os.chmod(home + '/minecraft.jar', 0700)
+            os.chmod(home + '/minecraft.jar', 0o700)
             user = handler.application.process_prefix + server_id
             os.chown(home + '/minecraft.jar', pwd.getpwnam(user).pw_uid, pwd.getpwnam(user).pw_gid)
 

@@ -1,7 +1,11 @@
 __author__ = 'brayden'
 
-import xmlrpclib
-import ConfigParser
+try:
+    import xmlrpclib
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
+    import xmlrpc.client as xmlrpclib
 import os
 
 
@@ -32,7 +36,7 @@ class Supervisor:
         config = ConfigParser.RawConfigParser()
         filename = directory + '/conf.d/%s.conf' % process_name
         if not os.path.exists(filename):
-            with file(filename, 'a'):
+            with open(filename, 'a'):
                 os.utime(filename, None) # touch the file
 
         config.read(filename)

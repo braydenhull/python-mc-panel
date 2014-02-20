@@ -86,7 +86,7 @@
                             </label>
                             <br><br>
                             <div style="display: inline;">
-                                <label for="currentMem">Current (max {{ psutil.virtual_memory().total / 1024 / 1024 }}MB): </label>
+                                <label for="currentMem">Current (max {{ float(psutil.virtual_memory().total) / 1024 / 1024 }}MB): </label>
                                 <span id="currentMem">1024MB</span>
                             </div>
 

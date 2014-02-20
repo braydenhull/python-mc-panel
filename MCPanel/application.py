@@ -4,7 +4,11 @@ import tornado
 import os
 import hashlib
 import Database.database
-import ConfigParser
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
+
 import json
 from tornado.web import URLSpec
 from Config import config
@@ -153,7 +157,8 @@ class Application(tornado.web.Application):
     def generate_username_cache(self):
         users = self.db.get_users()
         for user in users:
-            self.usernames[user.Username] = {'Is_Admin': user.Is_Admin}
+            self.usernames[user.Username.encode()] = {'Is_Admin': user.Is_Admin}
+
 
     def parse_supervisor_config(self):
         config = ConfigParser.RawConfigParser()

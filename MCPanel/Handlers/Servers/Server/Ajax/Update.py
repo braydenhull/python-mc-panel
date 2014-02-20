@@ -2,7 +2,7 @@ __author__ = 'brayden'
 
 from tornado.web import asynchronous
 from tornado.web import authenticated
-from Base import BaseServerAjaxHandler
+from Handlers.Servers.Server.Ajax.Base import BaseServerAjaxHandler
 import tornado.iostream
 from multiprocessing.pool import ThreadPool
 import tornado.ioloop

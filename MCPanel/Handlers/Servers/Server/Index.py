@@ -2,8 +2,7 @@ __author__ = 'brayden'
 
 from tornado.web import asynchronous
 from tornado.web import authenticated
-from Base import BaseServerHandler
-from tornado.web import HTTPError
+from Handlers.Servers.Server.Base import BaseServerHandler
 
 
 class ServerIndexHandler(BaseServerHandler):

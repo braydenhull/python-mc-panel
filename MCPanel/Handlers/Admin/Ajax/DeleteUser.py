@@ -2,7 +2,7 @@ __author__ = 'brayden'
 
 from tornado.web import asynchronous
 from tornado.web import authenticated
-from Base import BaseAdminAjaxHandler
+from Handlers.Admin.Ajax.Base import BaseAdminAjaxHandler
 
 
 class DeleteUserHandler(BaseAdminAjaxHandler):

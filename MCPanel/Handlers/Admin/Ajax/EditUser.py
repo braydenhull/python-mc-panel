@@ -1,6 +1,6 @@
 __author__ = 'brayden'
 from tornado.web import asynchronous
-from Base import BaseAdminAjaxHandler
+from Handlers.Admin.Ajax.Base import BaseAdminAjaxHandler
 from tornado.web import authenticated
 
 
@@ -14,7 +14,7 @@ class EditUserHandler(BaseAdminAjaxHandler):
                     is_admin = True
                 else:
                     is_admin = False
-                self.application.db.edit_user(self.get_argument('username'), is_admin=is_admin)
+                self.application.db.set_admin(self.get_argument('username'), is_admin=is_admin)
                 self.application.generate_username_cache()
                 self.finish({'result': {'success': True, 'message': 'User was successfully modified.'}})
             except Exception as e:

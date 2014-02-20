@@ -1,6 +1,6 @@
 __author__ = 'brayden'
 
-from Base import BaseWebSocketHandler
+from Handlers.Servers.WebSocket.Base import BaseWebSocketHandler
 import json
 import tornado.escape
 from peewee import DoesNotExist
@@ -57,5 +57,4 @@ class CreateServerHandler(BaseWebSocketHandler):
                 else:
                     self.write_message({"success": False, "message": "IP/Port combination already taken.", "complete": False})
         except ValueError or KeyError:
-            print message
             self.write_message({"success": False, "message": "Not well formatted message.", "complete": False})

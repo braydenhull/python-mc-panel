@@ -18,7 +18,7 @@ class Database():
         create_db = False
         if self.config.get('database', 'type') == 'sqlite':
             if not os.path.exists(self.config.get('database', 'host')):
-                print "Database is not populated. Initialising.."
+                print("Database is not populated. Initialising..")
                 create_db = True
             self.database = SqliteDatabase(self.config.get('database', 'host'))
             self.database.connect()
@@ -123,7 +123,7 @@ class Database():
         if create_db:
             self.initialiseDatabase()
             self.add_user('Admin', 'admin', True)
-            print "Database initialised. Login is: \r\nUsername: Admin\r\nPassword: admin"
+            print("Database initialised. Login is: \r\nUsername: Admin\r\nPassword: admin")
 
     def initialiseDatabase(self):  # if param is true it'll suppress errors
         self.Servers.create_table(True)
@@ -207,19 +207,8 @@ class Database():
     def delete_server(self, server_id):
         self.Servers.update(Is_Active = False).where(self.Servers.ID == server_id).execute()
 
-    def edit_user(self, username, password=None, api_key=None, session=None, is_admin=None):
-        user = self.Users()
-        user.Username = username
-        if type(password) is unicode:
-            user.Password = passlib.hash.sha1_crypt.encrypt(password, rounds=self.rounds)
-        if type(api_key) is unicode:
-            user.API_Key = api_key
-        if type(session) is unicode:
-            user.Session = session
-        if type(is_admin) is bool:
-            user.Is_Admin = is_admin
-
-        user.save()
+    def set_admin(self, username, is_admin):
+        self.Users.update(Is_Admin=is_admin).where(self.Users.Username == username).execute()
 
     def change_password(self, username, new_password):
         self.Users.update(Password=passlib.hash.sha1_crypt.encrypt(new_password, rounds=self.rounds)).where(self.Users.Username == username).execute()

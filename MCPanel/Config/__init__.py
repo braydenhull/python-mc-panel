@@ -1,12 +1,15 @@
 __author__ = 'brayden'
 
 import os
-import ConfigParser
+try:
+    import ConfigParser as configparser
+except ImportError:
+    import configparser
 
 
 class config:
     def __init__(self):
-        self.config = ConfigParser.SafeConfigParser()
+        self.config = configparser.SafeConfigParser()
         sample = """[database]
 type = sqlite
 # if you're using something like SQLite, then host just needs to be the file, leave the rest blank
@@ -64,6 +67,6 @@ configuration = /etc/supervisor/supervisord.conf
     def get(self, section, option):  # mimics get behaviour
         try:
             return self.config.get(section, option)
-        except ConfigParser.NoSectionError or ConfigParser.NoOptionError as e:
-            print "%s in %s is not present. Reverting to default." % (option, section)
+        except configparser.NoSectionError or configparser.NoOptionError as e:
+            print("%s in %s is not present. Reverting to default." % (option, section))
             return self.defaults[section][option]

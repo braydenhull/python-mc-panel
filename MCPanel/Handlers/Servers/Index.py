@@ -2,7 +2,7 @@ __author__ = 'brayden'
 
 from tornado.web import asynchronous
 from tornado.web import authenticated
-from Base import BaseServersHandler
+from Handlers.Servers.Base import BaseServersHandler
 from tornado.web import addslash
 
 
