@@ -47,8 +47,8 @@ from Handlers.Servers.Server.Ajax.Update import UpdateServerHandler
 from Handlers.Servers.Server.Ajax.GetProcessInfo import GetProcessInfoHandler
 from Handlers.Servers.Server.WebSocket.GetLog import GetLogHandler as WSGetLogHandler
 from Handlers.Servers.Server.Backup import ServerBackupHandler
-import psutil
-import netifaces # even though they're unnecessary, include them anyway so that pyinstaller will build them in, it can't analyse templates
+from Handlers.System.BackupDestinations import SystemBackupDestinationsHandler
+from Handlers.System.Backup.Index import BackupIndexHandler
 
 
 class Application(tornado.web.Application):
@@ -109,6 +109,8 @@ class Application(tornado.web.Application):
             ('Server_Ajax_GetProcessInfo', r'/servers/(\d+)/ajax/getProcessInfo', GetProcessInfoHandler),
             ('Server_WebSocket_GetLog', r'/servers/(\d+)/websocket/getLog', WSGetLogHandler),
             ('Server_Backup', r'/servers/(\d+)/backup', ServerBackupHandler),
+            ('System_BackupDestinations', r'/system/backup', SystemBackupDestinationsHandler),
+            ('System_Backup_Index', r'/system/backup/(\d+)/', BackupIndexHandler),
         ]
         handlers = [URLSpec(pattern, handler, name=name) for name, pattern, handler in handlers]
         settings = dict(

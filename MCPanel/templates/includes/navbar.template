@@ -32,9 +32,16 @@
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
                         <ul class="dropdown-menu">
-                            <li id="{{ handler.application.named_handlers['Admin_Home'].handler_class.__name__ }}"><a href="{{ reverse_url("Admin_Home") }}">Home</a></li>
-                            <li id="{{ handler.application.named_handlers['Admin_Users'].handler_class.__name__ }}"><a href="{{ reverse_url("Admin_Users") }}">Users</a></li>
-                            <li id="{{ handler.application.named_handlers['Admin_Roles'].handler_class.__name__ }}"><a href="{{ reverse_url("Admin_Roles") }}">Roles</a></li>
+{#                            <li id="{{ handler.application.named_handlers['Admin_Home'].handler_class.__name__ }}"><a href="{{ reverse_url("Admin_Home") }}">Home</a></li>#}
+                            <li id="{{ handler.application.named_handlers['Admin_Users'].handler_class.__name__ }}"><a href="{{ reverse_url("Admin_Users") }}"><i class="fa fa-users"></i> Users</a></li>
+                            <li id="{{ handler.application.named_handlers['Admin_Roles'].handler_class.__name__ }}"><a href="{{ reverse_url("Admin_Roles") }}"><i class="fa fa-check-square-o"></i> Roles</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">System <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li id="{{ handler.application.named_handlers['System_BackupDestinations'].handler_class.__name__ }}"><a href="{{ reverse_url("System_BackupDestinations") }}"><i class="glyphicon glyphicon-floppy-open"></i> Backup Destinations</a></li>
                         </ul>
                     </li>
                 {% end %}

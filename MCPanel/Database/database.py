@@ -5,6 +5,7 @@ import passlib.hash
 from Config import config
 from tornado.web import escape
 import os
+from peewee import ProgrammingError
 
 
 class Database():
@@ -14,12 +15,8 @@ class Database():
 
     def __init__(self):
         self.config = config()
-        self.rounds = 20000
-        create_db = False
+        self.rounds = 1000
         if self.config.get('database', 'type') == 'sqlite':
-            if not os.path.exists(self.config.get('database', 'host')):
-                print "Database is not populated. Initialising.."
-                create_db = True
             self.database = SqliteDatabase(self.config.get('database', 'host'))
             self.database.connect()
         elif self.config.get('database', 'type') == 'mysql':
@@ -120,7 +117,9 @@ class Database():
         self.User_Roles = User_Roles
         self.Backup_Destinations = Backup_Destinations
 
-        if create_db:
+        try:
+            self.Users.select().execute()
+        except ProgrammingError:
             self.initialiseDatabase()
             self.add_user('Admin', 'admin', True)
             print "Database initialised. Login is: \r\nUsername: Admin\r\nPassword: admin"
@@ -132,7 +131,7 @@ class Database():
         self.Permissions.create_table(True)
         self.Role_Permissions.create_table(True)
         self.User_Roles.create_table(True)
-        self.Backup_Destinations(True)
+        self.Backup_Destinations.create_table(True)
 
     def add_user(self, username, password, is_admin=False):
         password = passlib.hash.sha1_crypt.encrypt(password, rounds=self.rounds)
@@ -177,8 +176,8 @@ class Database():
         return self.Users.select(self.Users.Session).where(self.Users.Username == username).get().Session
 
     def check_credentials(self, username, password):
-        passwordHash = self.Users.select(self.Users.Password).where(self.Users.Username == username).get().Password
-        return passlib.hash.sha1_crypt.verify(password, passwordHash)
+        password_hash = self.Users.select(self.Users.Password).where(self.Users.Username == username).get().Password
+        return passlib.hash.sha1_crypt.verify(password, password_hash)
 
     def add_role(self, role_name):
         self.Roles.create(RoleName=role_name)
@@ -223,3 +222,22 @@ class Database():
 
     def change_password(self, username, new_password):
         self.Users.update(Password=passlib.hash.sha1_crypt.encrypt(new_password, rounds=self.rounds)).where(self.Users.Username == username).execute()
+
+    def get_backup_destinations(self):
+        return self.Backup_Destinations.select()
+
+    def add_backup_destination(self, friendly_name, backup_type, folder, host=None, remote=False):
+        if remote:
+            self.Backup_Destinations.create(FriendlyName = friendly_name, Type=backup_type, Folder=folder, Host=host, Remote=remote)
+        else:
+            self.Backup_Destinations.create(FriendlyName = friendly_name, Type=backup_type, Folder=folder, Host=None, Remote=remote)
+
+    def backup_destination_exists(self, destination_id):
+        try:
+            self.Backup_Destinations.select().where(self.Backup_Destinations.ID == destination_id).get()
+            return True
+        except DoesNotExist:
+            return False
+
+    def get_backup_destination_by_id(self, destination_id):
+        return self.Backup_Destinations.select().where(self.Backup_Destinations.ID == destination_id).get()

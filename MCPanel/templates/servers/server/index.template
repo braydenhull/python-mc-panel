@@ -42,7 +42,7 @@
                     <div id="cpuIdle" class="progress-bar progress-bar-success"></div>
                 </div>
                 <span class="label label-danger">CPU Used</span> <span class="label label-success">Idle CPU</span>
-            </label>
+            </label><p id="uptime">Server has been running for 0 days, 0 hours and 0 minutes.</p>
         </div>
         {% end %}
 
@@ -76,15 +76,23 @@
                     $("#cpuUsage").css("width", data['result']['data']['cpu_percent'] + '%').text(data['result']['data']['cpu_percent'] + '%');
                     var cpuIdle = (100 - data['result']['data']['cpu_percent']);
                     $("#cpuIdle").css("width", cpuIdle + '%').text(cpuIdle + '%');
+                    var delta = data['result']['data']['current_time'] - data['result']['data']['process_create_time'];
+                    var days = Math.floor(delta / 86400);
+                    var hours = Math.floor(delta / 3600) % 24;
+                    var minutes = Math.floor(delta / 60) % 60;
+                    $("#uptime").text("Server has been running for " + days + " days, " + hours + " hours and " + minutes + " minutes.")
                 } else {
                     $("#serverDashBoardErrorMessage").text(data['result']['message']);
                     $("#serverDashBoardCriticalError").fadeIn();
                 }
+            }).fail(function(data){
+                $("#serverDashBoardErrorMessage").text(data.responseJSON['result']['message']);
+                $("#serverDashBoardCriticalError").fadeIn();
             })
         }
 
         refreshProcessStats();
-        setInterval(refreshProcessStats, 1100)
+        setInterval(refreshProcessStats, 1000)
     })
 </script>
 {% include "includes/footer.template" %}

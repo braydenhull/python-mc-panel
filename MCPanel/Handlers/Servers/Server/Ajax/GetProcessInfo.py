@@ -21,16 +21,11 @@ class GetProcessInfoHandler(BaseServerAjaxHandler):
             process = psutil.Process(pid)
             self.process = process
             self.server_id = server_id
-            run_background(get_cpu_percent, self.on_complete, (process,))
-        except psutil.NoSuchProcess as e:
-            self.finish({"result": {"success": False, "message": "Server is not running or could not find valid PID."}})
-
-    def on_complete(self, result):
-        self.finish({"result": {
+            self.finish({"result": {
             "success": True,
             "message": None,
             "data": {
-                "cpu_percent": round(result),
+                "cpu_percent": round(psutil.cpu_percent(interval=0)),
                 "process_create_time": round(self.process.create_time, 0),
                 "current_time": round(time.time(), 0),
                 "current_memory_percent": round(self.process.get_memory_percent(), 0),
@@ -39,12 +34,5 @@ class GetProcessInfoHandler(BaseServerAjaxHandler):
 
             }
         }})
-
-
-def run_background(func, callback, args=(), kwds={}):
-    def _callback(result):
-        tornado.ioloop.IOLoop.instance().add_callback(lambda: callback(result))
-    _workers.apply_async(func, args, kwds, _callback)
-
-def get_cpu_percent(process):
-    return psutil.cpu_percent(interval=0.5) # interval of 1 seems to be most effective, however it locks this thread for a second
+        except psutil.NoSuchProcess as e:
+            self.finish({"result": {"success": False, "message": "Server is not running or could not find valid PID."}})

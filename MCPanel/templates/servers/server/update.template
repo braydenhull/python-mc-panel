@@ -6,6 +6,7 @@
     <link href="../../../static/css/style.css" rel="stylesheet" media="screen">
     <link href="../../../static/css/font-awesome.min.css" rel="stylesheet" media="screen">
     <link href="../../../static/css/jquery-ui.min.css" rel="stylesheet" media="screen">
+    <link href="../../../static/css/jquery.pnotify.default.css" rel="stylesheet" media="screen">
     <meta charset="UTF-8">
 </head>
 {% include "includes/navbar.template" %}
@@ -27,6 +28,7 @@
 </div>
 <script src="../../../static/js/jquery.min.js"></script>
 <script src="../../../static/js/bootstrap.min.js"></script>
+<script src="../../../static/js/jquery.pnotify.js"></script>
 <script>
     $(function(){
         $.post('{{ reverse_url("Server_Ajax_GetPlayers", server_id) }}').done(function(data){
@@ -40,9 +42,29 @@
         $("#updateServer").click(function(){
             $(this).attr('disabled', '').addClass('disabled');
             $("#refresh").addClass('fa-spin');
+            $.pnotify({
+                title: 'Updating server',
+                text: 'The server is now updating. This may take a while if the new Jar has not been cached already.',
+                type: 'message',
+                history: false
+            });
             $.post('{{ reverse_url("Server_Ajax_Update", server_id) }}', {"autostart": $("#autostart").prop("checked")}).done(function(data){
                 $("#refresh").removeClass('fa-spin');
-                $("#message").text("Update has finished successfully.")
+                $("#message").text("Update has finished successfully.");
+                $.pnotify({
+                    title: 'Update complete',
+                    text: 'The update has completed successfully.',
+                    type: 'success',
+                    history: false
+                })
+            }).fail(function(data){
+                $("#refresh").removeClass('fa-spin');
+                $.pnotify({
+                    title: 'Update failed',
+                    text: 'The update failed due to an unhandled exception. Exception: ' + data.responseJSON['result']['message'],
+                    type: 'error',
+                    history: false
+                })
             })
         });
 

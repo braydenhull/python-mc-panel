@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }} - System - Backup Destinations</title>
+    <link href="../../static/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link href="../../static/css/style.css" rel="stylesheet" media="screen">
+    <link href="../../static/css/font-awesome.min.css" rel="stylesheet" media="screen">
+    <link href="../../static/css/jquery.pnotify.default.css" rel="stylesheet" media="screen">
+    <meta charset="UTF-8">
+</head>
+<body>
+{% include "includes/navbar.template" %}
+<div class="container" style="padding-top: 10px;">
+    <div>
+        <h2>Local</h2>
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th style="width: 25px;">ID</th>
+                <th>Friendly Name</th>
+                <th>Type</th>
+                <th>Destination Folder</th>
+                <th style="width: 35px;"></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for destination in backup_destinations %}
+                {% if destination.Remote == False %}
+                <tr>
+                    <td>{{ destination.ID }}</td>
+                    <td>{{ destination.FriendlyName }}</td>
+                    <td>{{ destination.Type }}</td>
+                    <td>{{ destination.Folder }}</td>
+                    <td><a href="{{ reverse_url("System_Backup_Index", destination.ID) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a></td>
+                </tr>
+                {% end %}
+            {% end %}
+            </tbody>
+        </table>
+
+        <h2>Remote</h2>
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th style="width: 25px;">ID</th>
+                <th>Friendly Name</th>
+                <th>Type</th>
+                <th>Destination Folder</th>
+                <th>SSH Host</th>
+                <th style="width: 35px;"></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for destination in backup_destinations %}
+                {% if destination.Remote == True %}
+                <tr>
+                    <td>{{ destination.ID }}</td>
+                    <td>{{ destination.FriendlyName }}</td>
+                    <td>{{ destination.Type }}</td>
+                    <td>{{ destination.Folder }}</td>
+                    <td>{{ destination.Host }}</td>
+                    <td><a href="{{ reverse_url("System_Backup_Index", destination.ID) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a></td>
+                </tr>
+                {% end %}
+            {% end %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script src="../../static/js/jquery.min.js"></script>
+<script src="../../static/js/bootstrap.min.js"></script>
+{% include "includes/footer.template" %}
+</body>
+</html>

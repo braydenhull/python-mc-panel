@@ -10,7 +10,7 @@ class config:
         sample = """[database]
 type = sqlite
 # if you're using something like SQLite, then host just needs to be the file, leave the rest blank
-# supports sqlite, postgresql, mysql, sqlite
+# supports sqlite, postgresql, mysql
 #host = 127.0.0.1
 host = /root/.mc_panel/db.sqlite
 user = mcpanel
