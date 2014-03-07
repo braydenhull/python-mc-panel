@@ -346,7 +346,17 @@
         });
 
         var server = null;
-        var ws_socket = new WebSocket("ws://" + document.domain + ":" + location.port + "{{ reverse_url("Servers_WebSocket_CreateServer") }}");
+        var http_port = null;
+        if(location.port == ""){
+            if(location.protocol == "http:"){
+                http_port = 80;
+            } else if(location.protocol == "https:"){
+                http_port = 443;
+            }
+        } else {
+            http_port = location.port;
+        }
+        var ws_socket = new WebSocket("ws://" + document.domain + ":" + http_port + "{{ reverse_url("Servers_WebSocket_CreateServer") }}");
         $("#criticalError").hide();
         $("#craftbukkit_Form").hide();
         $("#vanilla_Form").hide();

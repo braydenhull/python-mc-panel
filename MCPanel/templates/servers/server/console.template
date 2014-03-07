@@ -53,7 +53,17 @@
 
         refreshLogAjax(true);
 
-        var ws = new WebSocket("ws://" + document.domain + ":" + location.port + "{{ reverse_url('Server_WebSocket_GetLog', server_id) }}");
+        var http_port = null;
+        if(location.port == ""){
+            if(location.protocol == "http:"){
+                http_port = 80;
+            } else if(location.protocol == "https:"){
+                http_port = 443;
+            }
+        } else {
+            http_port = location.port;
+        }
+        var ws = new WebSocket("ws://" + document.domain + ":" + http_port + "{{ reverse_url('Server_WebSocket_GetLog', server_id) }}");
         ws.onopen = function(e){
             ws.send(JSON.stringify({
                 "action": "auth",
