@@ -4,8 +4,6 @@ from peewee import *
 import passlib.hash
 from Config import config
 from tornado.web import escape
-import os
-from peewee import ProgrammingError
 
 
 class Database():
@@ -119,7 +117,7 @@ class Database():
 
         try:
             self.Users.select().execute()
-        except ProgrammingError:
+        except:
             self.initialiseDatabase()
             self.add_user('Admin', 'admin', True)
             print "Database initialised. Login is: \r\nUsername: Admin\r\nPassword: admin"
