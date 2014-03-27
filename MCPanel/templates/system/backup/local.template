@@ -35,12 +35,13 @@
 
                         <div id="collapse-{{ server_name }}" class="panel-collapse collapse">
                             <div class="panel-body">
-                                <table class="table table-bordered">
+                                <table class="table">
                                     <thead>
                                     <tr>
                                         <th>File</th>
                                         <th>Backup Date</th>
                                         <th>Size</th>
+                                        <th style="width: 5px;"></th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -54,7 +55,7 @@
                                             {% except OSError as e %}
                                                     <td>File is missing or inaccessible: {{ e }}</td>
                                             {% end %}
-                                            <td><button title="Delete backup" class="btn btn-danger btn-xs" server_name="{{ server_name }}" index="{{ index }}"><i class="fa fa-trash-o"></i></button></td>
+                                            <td><button title="Delete backup" class="btn btn-danger btn-xs delete-backup-button" server-name="{{ server_name }}" index="{{ index }}"><i class="fa fa-trash-o"></i></button></td>
                                         </tr>
                                         {% end %}
                                     </tbody>
@@ -67,18 +68,89 @@
                 <p>No backups present on the server.</p>
                 {% end %}
             </div>
+
+            <div class="modal fade" id="deleteBackupModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title text-danger">Delete Backup</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-block alert-danger" id="deleteBackupModalCriticalError">
+                                <h4>Critical Error</h4>
+                                <p id="deleteBackupModalErrorMessage"></p>
+                            </div>
+                            <p>This will remove the backup and optionally (if the option below is checked) remove the backup archive.</p>
+                            <form class="form-inline">
+                                <label><input type="checkbox" checked="" id="deleteBackupModalDeleteBackup"> Delete Backup File</label>
+                            </form>
+                            <input type="hidden" id="deleteBackupModalServerName">
+                            <input type="hidden" id="deleteBackupModalIndex">
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
+                            <button type="button" id="deleteBackupModalDeleteButton" class="btn btn-danger"><i class="fa fa-refresh" id="deleteBackupModalRefresh"></i> Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <h4>Settings</h4>
+            <form class="form-group" method="post">
+                <label>ID<input name="id" style="width: 75px;" class="form-control" type="text" disabled="" value="{{ destination.ID }}"></label>
+                <label>Friendly Name<input name="friendly_name" type="text" class="form-control" value="{{ destination.FriendlyName }}"></label>
+                <label>Folder<input name="folder" type="text" class="form-control" value="{{ destination.Folder }}"></label>
+                <label>Backup Limit<input style="width: 150px;" rel="tooltip" title="This is the limit of backups each server can have. Use 0 for unlimited. Admins override this limit." data-placement="bottom" name="backup_limit" type="number" class="form-control" value="{{ destination.Backup_Limit }}"></label>
+                <button type="submit" class="btn btn-success"><i class="fa fa-save"></i> Save</button>
+            </form>
         </div>
     </div>
 </div>
 <script src="../../../static/js/jquery.min.js"></script>
 <script src="../../../static/js/bootstrap.min.js"></script>
 <script src="../../../static/js/highcharts.js"></script>
-<!-- {% raw backups %} -->
 <script>
     $(function(){
 
-        $("#backups").collapse({
+        var backups = $("#backups");
+
+        backups.collapse({
             toggle: true
+        });
+
+        $("[rel='tooltip']").tooltip();
+
+        backups.on('click', '.delete-backup-button', function(){
+            var server_name = $(this).attr('server-name');
+            var index = $(this).attr('index');
+            $("#deleteBackupModalServerName").val(server_name);
+            $("#deleteBackupModalIndex").val(index);
+            $("#deleteBackupModalCriticalError").hide();
+            $("#deleteBackupModalDeleteButton").removeAttr('disabled');
+            $("#deleteBackupModal").modal('show');
+        });
+
+        $("#deleteBackupModalDeleteButton").click(function(){
+            var server_name = $("#deleteBackupModalServerName").val();
+            var index = $("#deleteBackupModalIndex").val();
+            $("#deleteBackupModalDeleteButton").attr('disabled', '');
+            $("#deleteBackupModalRefresh").addClass('fa-spin');
+            $.post('{{ reverse_url("System_Backup_Ajax_DeleteBackup", destination_id) }}', {"destination": "local", "remove_file": $("#deleteBackupModalDeleteBackup").prop('checked'), "server_name": server_name, "index": index}).done(function(data){
+                $("#deleteBackupModalDeleteButton").removeAttr('disabled');
+                $("#deleteBackupModalRefresh").removeClass('fa-spin');
+                location.reload(true)
+            }).fail(function(data){
+                $("#deleteBackupModalCriticalError").fadeIn();
+                $("#deleteBackupModalRefresh").removeClass('fa-spin');
+                if(!data['responseJSON']['result']['success']){
+                    $("#deleteBackupModalErrorMessage").text(data['responseJSON']['result']['message'])
+                } else {
+                    $("#deleteBackupModalErrorMessage").text("Unknown error occurred.");
+                }
+            })
         });
 
         var disk_usage = {

@@ -1,3 +1,5 @@
+{% import time as time %}
+{% import os as os %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -6,6 +8,7 @@
     <link href="../../../static/css/style.css" rel="stylesheet" media="screen">
     <link href="../../../static/css/font-awesome.min.css" rel="stylesheet" media="screen">
     <link href="../../../static/css/jquery-ui.min.css" rel="stylesheet" media="screen">
+    <link href="../../../static/css/jquery.pnotify.default.css" rel="stylesheet" media="screen">
     <meta charset="UTF-8">
 </head>
 <body>
@@ -13,14 +16,168 @@
 <div class="container" style="padding-top: 25px;">
     {% include "includes/server-pills.template" %}
     <div class="col-md-10">
+        <h4>Server Backups</h4>
+        <div class="panel-group" id="backup_destinations">
+            {% for destination in destinations %}
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a data-toggle="collapse" data-parent="backup_destinations" href="#collapse-{{ destination.ID }}">
+                            <strong>{{ destination.FriendlyName }}</strong>
+                            {% if destination.Remote %}<small>Remote</small>{% else %}<small>Local</small>{% end %}
+                        </a>
+                    </h4>
+                </div>
 
+                <div id="collapse-{{ destination.ID }}" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Backup Date</th>
+                                <th>Size</th>
+                                <th style="width: 5px;"></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% if not destination.Remote %}
+                                {% for index, backup in enumerate(local_backup(destination.ID, destination.Folder).get_backups_by_server(handler.application.process_prefix + server_id)) %}
+                                    <tr>
+                                    <td>{{ time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(backup['date'])) }} UTC</td>
+                                    {% try %}
+                                        {% set size = os.path.getsize(backup['file']) %}{# Workaround for quirk with the way it encounters the exception, and how HTML is rendered with it #}
+                                        <td>{{ size / 1024 / 1024 }}MB</td>
+                                    {% except OSError as e %}
+                                        <td>File is missing or inaccessible: {{ e }}</td>
+                                    {% end %}
+                                    <td><button title="Delete Backup" class="btn btn-danger btn-xs delete-backup-button" destination-id="{{ destination.ID }}" index="{{ index }}"><i class="fa fa-trash-o"></i></button></td>
+                                    </tr>
+                                {% end %}
+                            {% end %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% end %}
+        </div>
+        <div class="form-group" >
+            <label>Backup Destination<select class="form-control" id="destination_list">
+                {% for destination in destinations %}
+                <option value="{{ destination.ID }}">{{ destination.FriendlyName }}</option>
+                {% end %}
+            </select></label>
+            <label>Format<select class="form-control" id="backup_type">
+                <option selected="" value="zip">Zip</option>
+                <option value="tar">Tar</option>
+            </select></label>
+            <button type="button" class="btn btn-primary" id="backup_button"><i class="fa fa-refresh" id="backup_refresh"></i> Backup</button>
+        </div>
+
+        <div class="modal fade" id="deleteBackupModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title text-danger">Delete Backup</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-block alert-danger" id="deleteBackupModalCriticalError">
+                            <h4>Critical Error</h4>
+                            <p id="deleteBackupModalErrorMessage"></p>
+                        </div>
+                        <p>This will remove the backup and optionally (if the option below is checked) remove the backup archive.</p>
+                        <form class="form-inline">
+                            <label><input type="checkbox" checked="" id="deleteBackupModalDeleteBackup"> Delete Backup File</label>
+                        </form>
+                        <input type="hidden" id="deleteBackupModalDestinationID">
+                        <input type="hidden" id="deleteBackupModalIndex">
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
+                        <button type="button" id="deleteBackupModalDeleteButton" class="btn btn-danger"><i class="fa fa-refresh" id="deleteBackupModalRefresh"></i> Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <script src="../../../static/js/jquery.min.js"></script>
+<script src="../../../static/js/jquery.pnotify.js"></script>
 <script src="../../../static/js/bootstrap.min.js"></script>
 <script>
     $(function(){
+        var backup_destinations = $("#backup_destinations");
+
+        $("#backup_button").click(function(){
+            var destination = $("#destination_list").val();
+            var backup_type = $("#backup_type").val();
+            $.pnotify({
+                title: 'Backup Server',
+                text: 'Beginning server backup',
+                type: 'info',
+                history: false
+            });
+            $(this).attr('disabled', '');
+            $("#backup_refresh").addClass('fa-spin');
+            $.post('{{ reverse_url("Server_Ajax_BackupServer", server_id) }}', {"destination_id": destination, "destination": "local", "backup_type": backup_type}).done(function(data){
+                if(data['result']['success']){
+                    $("#backup_refresh").removeClass('fa-spin');
+                    location.reload(true);
+                } else {
+                    $.pnotify({
+                        title: 'Backup Server',
+                        text: 'Failed to backup server\r\n' + data['result']['message'],
+                        type: 'error',
+                        history: false
+                    })
+                }
+            }).fail(function(data){
+                $.pnotify({
+                    title: 'Backup Server',
+                    text: 'Failed to backup server\r\n' + data['responseJSON']['result']['message'],
+                    type: 'error',
+                    history: false
+                })
+            })
+        });
+
+        $("#backup_button").removeAttr('disabled');
+
+        backup_destinations.collapse({
+            toggle: true
+        });
         $("#server-id{{ server_id }}").addClass("active");
+
+        backup_destinations.on('click', '.delete-backup-button', function(){
+            var index = $(this).attr('index');
+            var destination_id = $(this).attr('destination-id');
+            $("#deleteBackupModalIndex").val(index);
+            $("#deleteBackupModalDestinationID").val(destination_id);
+            $("#deleteBackupModalCriticalError").hide();
+            $("#deleteBackupModalDeleteButton").removeAttr('disabled');
+            $("#deleteBackupModal").modal('show');
+        });
+
+        $("#deleteBackupModalDeleteButton").click(function(){
+            var destination_id  = $("#deleteBackupModalDestinationID").val();
+            var index = $("#deleteBackupModalIndex").val();
+            $("#deleteBackupModalDeleteButton").attr('disabled', '');
+            $("#deleteBackupModalRefresh").addClass('fa-spin');
+            $.post('{{ reverse_url("Server_Ajax_DeleteBackup", server_id) }}', {"remove_file": $("#deleteBackupModalDeleteBackup").prop('checked'), "destination_id": destination_id, "index": index}).done(function(data){
+                $("#deleteBackupModalDeleteButton").removeAttr('disabled');
+                $("#deleteBackupModalRefresh").removeClass('fa-spin');
+                location.reload(true)
+            }).fail(function(data){
+                $("#deleteBackupModalCriticalError").fadeIn();
+                $("#deleteBackupModalRefresh").removeClass('fa-spin');
+                if(!data['responseJSON']['result']['success']){
+                    $("#deleteBackupModalErrorMessage").text(data['responseJSON']['result']['message'])
+                } else {
+                    $("#deleteBackupModalErrorMessage").text("Unknown error occurred.");
+                }
+            })
+        });
     })
 </script>
 {% include "includes/footer.template" %}

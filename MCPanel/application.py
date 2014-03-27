@@ -9,46 +9,51 @@ import json
 from tornado.web import URLSpec
 from Config import config
 from Minecraft.supervisor import Supervisor
-from Handlers.Index import IndexHandler
-from Handlers.Login import LoginHandler
-from Handlers.Ajax.PerformLogin import PerformLoginHandler
-from Handlers.Logout import LogoutHandler
-from Handlers.Admin.Index import AdminIndex
-from Handlers.Admin.Users import AdminUsers
-from Handlers.Admin.Roles import AdminRoles
-from Handlers.Admin.Ajax.GetUsers import GetUserHandler
-from Handlers.Admin.Ajax.AddUser import AddUserHandler
-from Handlers.Admin.Ajax.DeleteUser import DeleteUserHandler
-from Handlers.Admin.Ajax.EditUser import EditUserHandler
-from Handlers.Servers.Index import ServersIndexHandler
-from Handlers.Servers.Server.Index import ServerIndexHandler
-from Handlers.Servers.Server.Players import ServerPlayersHandler
-from Handlers.Servers.WebSocket.CreateServer import CreateServerHandler
-from Handlers.Servers.Ajax.CheckAddress import CheckAddressHandler
-from Handlers.Servers.Ajax.GetInfo import GetInfoHandler
-from Handlers.Servers.Server.Console import ServerConsoleHandler
-from Handlers.Servers.Server.Ajax.GetLog import GetLogHandler
-from Handlers.Servers.Server.Ajax.SendCommand import SendCommandHandler
-from Handlers.Servers.Server.Properties import ServerPropertiesHandler
-from Handlers.Servers.Ajax.DeleteServer import DeleteServerHandler
-from Handlers.Servers.Server.Ajax.GetPlayers import GetPlayersHandler
-from Handlers.Servers.Server.Ajax.KickPlayer import KickPlayerHandler
-from Handlers.Servers.Server.Ajax.BanPlayer import BanPlayerHandler
-from Handlers.Servers.Server.Ajax.GetBannedPlayers import GetBannedPlayersHandler
-from Handlers.Servers.Server.Ajax.UnbanPlayer import UnbanPlayerHandler
-from Handlers.Servers.Server.Ajax.GetOperators import GetOperatorsHandler
-from Handlers.Servers.Server.Ajax.OpPlayer import OpPlayerHandler
-from Handlers.Servers.Server.Ajax.DeopPlayer import DeopPlayerHandler
-from Handlers.User.Index import UserIndexHandler
-from Handlers.Servers.Ajax.StartServer import StartServerHandler
-from Handlers.Servers.Ajax.StopServer import StopServerHandler
-from Handlers.Servers.Server.Update import ServerUpdateHandler
-from Handlers.Servers.Server.Ajax.Update import UpdateServerHandler
-from Handlers.Servers.Server.Ajax.GetProcessInfo import GetProcessInfoHandler
-from Handlers.Servers.Server.WebSocket.GetLog import GetLogHandler as WSGetLogHandler
-from Handlers.Servers.Server.Backup import ServerBackupHandler
-from Handlers.System.BackupDestinations import SystemBackupDestinationsHandler
-from Handlers.System.Backup.Index import BackupIndexHandler
+import Handlers
+import Handlers.Index
+import Handlers.Login
+import Handlers.Ajax
+import Handlers.Ajax.PerformLogin
+import Handlers.Logout
+import Handlers.Admin.Index
+import Handlers.Admin.Users
+import Handlers.Admin.Roles
+import Handlers.Admin.Ajax.GetUsers
+import Handlers.Admin.Ajax.AddUser
+import Handlers.Admin.Ajax.DeleteUser
+import Handlers.Admin.Ajax.EditUser
+import Handlers.Servers.Index
+import Handlers.Servers.Server.Index
+import Handlers.Servers.Server.Players
+import Handlers.Servers.WebSocket.CreateServer
+import Handlers.Servers.Ajax.CheckAddress
+import Handlers.Servers.Ajax.GetInfo
+import Handlers.Servers.Server.Console
+import Handlers.Servers.Server.Ajax.GetLog
+import Handlers.Servers.Server.Ajax.SendCommand
+import Handlers.Servers.Server.Properties
+import Handlers.Servers.Ajax.DeleteServer
+import Handlers.Servers.Server.Ajax.GetPlayers
+import Handlers.Servers.Server.Ajax.KickPlayer
+import Handlers.Servers.Server.Ajax.BanPlayer
+import Handlers.Servers.Server.Ajax.GetBannedPlayers
+import Handlers.Servers.Server.Ajax.UnbanPlayer
+import Handlers.Servers.Server.Ajax.GetOperators
+import Handlers.Servers.Server.Ajax.OpPlayer
+import Handlers.Servers.Server.Ajax.DeopPlayer
+import Handlers.User.Index
+import Handlers.Servers.Ajax.StartServer
+import Handlers.Servers.Ajax.StopServer
+import Handlers.Servers.Server.Update
+import Handlers.Servers.Server.Ajax.Update
+import Handlers.Servers.Server.Ajax.GetProcessInfo
+import Handlers.Servers.Server.WebSocket.GetLog
+import Handlers.Servers.Server.Backup
+import Handlers.System.BackupDestinations
+import Handlers.System.Backup.Index
+import Handlers.System.Backup.Ajax.DeleteBackup
+import Handlers.Servers.Server.Ajax.BackupServer
+import Handlers.Servers.Server.Ajax.DeleteBackup
 
 
 class Application(tornado.web.Application):
@@ -71,46 +76,49 @@ class Application(tornado.web.Application):
         self.setup_vanilla_jar_cache()
         self.vanilla_builds = {}
         handlers = [
-            ('Home', r'/', IndexHandler),
-            ('Login', r'/login', LoginHandler),
-            ('PerformLogin', r'/ajax/performLogin', PerformLoginHandler),
-            ('Logout', r'/logout', LogoutHandler),
-            ('Admin_Home', r'/admin/?', AdminIndex),
-            ('Admin_Users', r'/admin/users', AdminUsers),
-            ('Admin_Roles', r'/admin/roles', AdminRoles),
-            ('Admin_Ajax_GetUsers', r'/admin/ajax/getUsers', GetUserHandler),
-            ('Admin_Ajax_AddUser', r'/admin/ajax/addUser', AddUserHandler),
-            ('Admin_Ajax_DeleteUser', r'/admin/ajax/deleteUser', DeleteUserHandler),
-            ('Admin_Ajax_EditUser', r'/admin/ajax/editUser', EditUserHandler),
-            ('Servers_Index', r'/servers/?', ServersIndexHandler),
-            ('Server_Index', r'/servers/(\d+)/', ServerIndexHandler),
-            ('Server_Players', r'/servers/(\d+)/players', ServerPlayersHandler),
-            ('Servers_WebSocket_CreateServer', r'/servers/websocket/createServer', CreateServerHandler),
-            ('Servers_Ajax_CheckAddress', r'/servers/ajax/checkAddress', CheckAddressHandler),
-            ('Servers_Ajax_GetInfo', r'/servers/ajax/getInfo', GetInfoHandler),
-            ('Server_Console', r'/servers/(\d+)/console', ServerConsoleHandler),
-            ('Server_Ajax_GetLog', r'/servers/(\d+)/ajax/getLog', GetLogHandler),
-            ('Server_Ajax_SendCommand', r'/servers/(\d+)/ajax/sendCommand', SendCommandHandler),
-            ('Server_Properties', r'/servers/(\d+)/properties', ServerPropertiesHandler),
-            ('Servers_DeleteServer', r'/servers/ajax/deleteServer', DeleteServerHandler),
-            ('Server_Ajax_GetPlayers', r'/servers/(\d+)/ajax/getPlayers', GetPlayersHandler),
-            ('Server_Ajax_KickPlayer', r'/servers/(\d+)/ajax/kickPlayer', KickPlayerHandler),
-            ('Server_Ajax_BanPlayer', r'/servers/(\d+)/ajax/banPlayer', BanPlayerHandler),
-            ('Server_Ajax_GetBannedPlayers', r'/servers/(\d+)/ajax/getBannedPlayers', GetBannedPlayersHandler),
-            ('Server_Ajax_UnbanPlayer', r'/servers/(\d+)/ajax/unbanPlayer',  UnbanPlayerHandler),
-            ('Server_Ajax_GetOperators', r'/servers/(\d+)/ajax/getOperators', GetOperatorsHandler),
-            ('Server_Ajax_OpPlayer', r'/servers/(\d+)/ajax/opPlayer', OpPlayerHandler),
-            ('Server_Ajax_DeopPlayer', r'/servers/(\d+)/ajax/deopPlayer', DeopPlayerHandler),
-            ('User_Index', r'/user/?', UserIndexHandler),
-            ('Servers_Ajax_StartServer', r'/servers/ajax/startServer', StartServerHandler),
-            ('Servers_Ajax_StopServer', r'/servers/ajax/stopServer', StopServerHandler),
-            ('Server_Update', r'/servers/(\d+)/update', ServerUpdateHandler),
-            ('Server_Ajax_Update', r'/servers/(\d+)/ajax/update', UpdateServerHandler),
-            ('Server_Ajax_GetProcessInfo', r'/servers/(\d+)/ajax/getProcessInfo', GetProcessInfoHandler),
-            ('Server_WebSocket_GetLog', r'/servers/(\d+)/websocket/getLog', WSGetLogHandler),
-            ('Server_Backup', r'/servers/(\d+)/backup', ServerBackupHandler),
-            ('System_BackupDestinations', r'/system/backup', SystemBackupDestinationsHandler),
-            ('System_Backup_Index', r'/system/backup/(\d+)/', BackupIndexHandler),
+            ('Home', r'/', Handlers.Index.IndexHandler),
+            ('Login', r'/login', Handlers.Login.LoginHandler),
+            ('PerformLogin', r'/ajax/performLogin', Handlers.Ajax.PerformLogin.PerformLoginHandler),
+            ('Logout', r'/logout', Handlers.Logout.LogoutHandler),
+            ('Admin_Home', r'/admin/?', Handlers.Admin.Index.AdminIndex),
+            ('Admin_Users', r'/admin/users', Handlers.Admin.Users.AdminUsers),
+            ('Admin_Roles', r'/admin/roles', Handlers.Admin.Roles.AdminRoles),
+            ('Admin_Ajax_GetUsers', r'/admin/ajax/getUsers', Handlers.Admin.Ajax.GetUsers.GetUserHandler),
+            ('Admin_Ajax_AddUser', r'/admin/ajax/addUser', Handlers.Admin.Ajax.AddUser.AddUserHandler),
+            ('Admin_Ajax_DeleteUser', r'/admin/ajax/deleteUser', Handlers.Admin.Ajax.DeleteUser.DeleteUserHandler),
+            ('Admin_Ajax_EditUser', r'/admin/ajax/editUser', Handlers.Admin.Ajax.EditUser.EditUserHandler),
+            ('Servers_Index', r'/servers/?', Handlers.Servers.Index.ServersIndexHandler),
+            ('Server_Index', r'/servers/(\d+)/', Handlers.Servers.Server.Index.ServerIndexHandler),
+            ('Server_Players', r'/servers/(\d+)/players', Handlers.Servers.Server.Players.ServerPlayersHandler),
+            ('Servers_WebSocket_CreateServer', r'/servers/websocket/createServer', Handlers.Servers.WebSocket.CreateServer.CreateServerHandler),
+            ('Servers_Ajax_CheckAddress', r'/servers/ajax/checkAddress', Handlers.Servers.Ajax.CheckAddress.CheckAddressHandler),
+            ('Servers_Ajax_GetInfo', r'/servers/ajax/getInfo', Handlers.Servers.Ajax.GetInfo.GetInfoHandler),
+            ('Server_Console', r'/servers/(\d+)/console', Handlers.Servers.Server.Console.ServerConsoleHandler),
+            ('Server_Ajax_GetLog', r'/servers/(\d+)/ajax/getLog', Handlers.Servers.Server.Ajax.GetLog.GetLogHandler),
+            ('Server_Ajax_SendCommand', r'/servers/(\d+)/ajax/sendCommand', Handlers.Servers.Server.Ajax.SendCommand.SendCommandHandler),
+            ('Server_Properties', r'/servers/(\d+)/properties', Handlers.Servers.Server.Properties.ServerPropertiesHandler),
+            ('Servers_DeleteServer', r'/servers/ajax/deleteServer', Handlers.Servers.Ajax.DeleteServer.DeleteServerHandler),
+            ('Server_Ajax_GetPlayers', r'/servers/(\d+)/ajax/getPlayers', Handlers.Servers.Server.Ajax.GetPlayers.GetPlayersHandler),
+            ('Server_Ajax_KickPlayer', r'/servers/(\d+)/ajax/kickPlayer', Handlers.Servers.Server.Ajax.KickPlayer.KickPlayerHandler),
+            ('Server_Ajax_BanPlayer', r'/servers/(\d+)/ajax/banPlayer', Handlers.Servers.Server.Ajax.BanPlayer.BanPlayerHandler),
+            ('Server_Ajax_GetBannedPlayers', r'/servers/(\d+)/ajax/getBannedPlayers', Handlers.Servers.Server.Ajax.GetBannedPlayers.GetBannedPlayersHandler),
+            ('Server_Ajax_UnbanPlayer', r'/servers/(\d+)/ajax/unbanPlayer',  Handlers.Servers.Server.Ajax.UnbanPlayer.UnbanPlayerHandler),
+            ('Server_Ajax_GetOperators', r'/servers/(\d+)/ajax/getOperators', Handlers.Servers.Server.Ajax.GetOperators.GetOperatorsHandler),
+            ('Server_Ajax_OpPlayer', r'/servers/(\d+)/ajax/opPlayer', Handlers.Servers.Server.Ajax.OpPlayer.OpPlayerHandler),
+            ('Server_Ajax_DeopPlayer', r'/servers/(\d+)/ajax/deopPlayer', Handlers.Servers.Server.Ajax.DeopPlayer.DeopPlayerHandler),
+            ('User_Index', r'/user/?', Handlers.User.Index.UserIndexHandler),
+            ('Servers_Ajax_StartServer', r'/servers/ajax/startServer', Handlers.Servers.Ajax.StartServer.StartServerHandler),
+            ('Servers_Ajax_StopServer', r'/servers/ajax/stopServer', Handlers.Servers.Ajax.StopServer.StopServerHandler),
+            ('Server_Update', r'/servers/(\d+)/update', Handlers.Servers.Server.Update.ServerUpdateHandler),
+            ('Server_Ajax_Update', r'/servers/(\d+)/ajax/update', Handlers.Servers.Server.Ajax.Update.UpdateServerHandler),
+            ('Server_Ajax_GetProcessInfo', r'/servers/(\d+)/ajax/getProcessInfo', Handlers.Servers.Server.Ajax.GetProcessInfo.GetProcessInfoHandler),
+            ('Server_WebSocket_GetLog', r'/servers/(\d+)/websocket/getLog', Handlers.Servers.Server.WebSocket.GetLog.GetLogHandler),
+            ('Server_Backup', r'/servers/(\d+)/backup', Handlers.Servers.Server.Backup.ServerBackupHandler),
+            ('System_BackupDestinations', r'/system/backup', Handlers.System.BackupDestinations.SystemBackupDestinationsHandler),
+            ('System_Backup_Index', r'/system/backup/(\d+)/', Handlers.System.Backup.Index.BackupIndexHandler),
+            ('System_Backup_Ajax_DeleteBackup', r'/system/backup/(\d+)/ajax/deleteBackup', Handlers.System.Backup.Ajax.DeleteBackup.DeleteBackupHandler),
+            ('Server_Ajax_BackupServer', r'/servers/(\d+)/ajax/backupServer', Handlers.Servers.Server.Ajax.BackupServer.BackupServerHandler),
+            ('Server_Ajax_DeleteBackup', r'/servers/(\d+)/ajax/deleteBackup', Handlers.Servers.Server.Ajax.DeleteBackup.DeleteBackupHandler),
         ]
         handlers = [URLSpec(pattern, handler, name=name) for name, pattern, handler in handlers]
         settings = dict(

@@ -33,7 +33,9 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def if_admin(self):
         try:
-            if not self.application.db.is_user_admin(self.current_user):
+            if self.current_user is None:
+                self.redirect(self.application.settings['login_url'])
+            elif not self.application.db.is_user_admin(self.current_user):
                 raise HTTPError(403)
         except DoesNotExist as e:
             raise HTTPError(403)

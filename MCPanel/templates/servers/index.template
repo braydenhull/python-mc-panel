@@ -23,7 +23,7 @@
                 <th>Address</th>
                 <th>Port</th>
                 <th>Owner</th>
-                <th style="width: 160px;">Actions</th>
+                <th style="width: 144px;"></th>
             </tr>
             </thead>
             <tbody>

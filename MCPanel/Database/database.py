@@ -64,6 +64,7 @@ class Database():
             Host = CharField(max_length=255, null=True, default=None) # if remote, then this is the host to use, as defined in ~/.ssh/config, which will contain private key, public key, hostname, port etc.
             # private key is required for passwordless authentication, passwords are a bad idea and NOT supported.
             Remote = BooleanField(null=False, default=False)
+            Backup_Limit = IntegerField(null=False, default=0)
 
             class Meta:
                 database = self.database
@@ -239,3 +240,6 @@ class Database():
 
     def get_backup_destination_by_id(self, destination_id):
         return self.Backup_Destinations.select().where(self.Backup_Destinations.ID == destination_id).get()
+
+    def set_local_backup_settings(self, destination_id, friendly_name, folder, backup_limit):
+        self.Backup_Destinations.update(FriendlyName=friendly_name, Folder=folder, Backup_Limit=backup_limit).where(self.Backup_Destinations.ID == destination_id).execute()

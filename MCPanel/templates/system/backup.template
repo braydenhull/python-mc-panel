@@ -20,6 +20,7 @@
                 <th>Friendly Name</th>
                 <th>Type</th>
                 <th>Destination Folder</th>
+                <th>Backup Limit</th>
                 <th style="width: 35px;"></th>
             </tr>
             </thead>
@@ -31,6 +32,7 @@
                     <td>{{ destination.FriendlyName }}</td>
                     <td>{{ destination.Type }}</td>
                     <td>{{ destination.Folder }}</td>
+                    <td>{{ destination.Backup_Limit }}</td>
                     <td><a href="{{ reverse_url("System_Backup_Index", destination.ID) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a></td>
                 </tr>
                 {% end %}
@@ -38,37 +40,57 @@
             </tbody>
         </table>
 
-        <h2>Remote</h2>
-        <table class="table table-bordered">
-            <thead>
-            <tr>
-                <th style="width: 25px;">ID</th>
-                <th>Friendly Name</th>
-                <th>Type</th>
-                <th>Destination Folder</th>
-                <th>SSH Host</th>
-                <th style="width: 35px;"></th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for destination in backup_destinations %}
-                {% if destination.Remote == True %}
-                <tr>
-                    <td>{{ destination.ID }}</td>
-                    <td>{{ destination.FriendlyName }}</td>
-                    <td>{{ destination.Type }}</td>
-                    <td>{{ destination.Folder }}</td>
-                    <td>{{ destination.Host }}</td>
-                    <td><a href="{{ reverse_url("System_Backup_Index", destination.ID) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a></td>
-                </tr>
-                {% end %}
-            {% end %}
-            </tbody>
-        </table>
+        <div class="form-group">
+            <label>Friendly Name <input style="width: 300px;" class="form-control" type="text" placeholder="My Backup Destination" id="add_local_friendlyname"></label>
+            <label>Folder <input class="form-control" type="text" style="width: 600px;" placeholder="/backup/mybackuplocation/" id="add_local_folder"></label>
+            <label>Backup Limit <input id="add_local_backup_limit" type="number" class="form-control" placeholder="20"></label>
+            <button type="button" class="btn btn-success" id="add_local_submit">Add New Destination</button>
+        </div>
+
+{#        <h2>Remote</h2>#}
+{#        <table class="table table-bordered">#}
+{#            <thead>#}
+{#            <tr>#}
+{#                <th style="width: 25px;">ID</th>#}
+{#                <th>Friendly Name</th>#}
+{#                <th>Type</th>#}
+{#                <th>Destination Folder</th>#}
+{#                <th>SSH Host</th>#}
+{#                <th>Backup Limit</th>#}
+{#                <th style="width: 35px;"></th>#}
+{#            </tr>#}
+{#            </thead>#}
+{#            <tbody>#}
+{#            {% for destination in backup_destinations %}#}
+{#                {% if destination.Remote == True %}#}
+{#                <tr>#}
+{#                    <td>{{ destination.ID }}</td>#}
+{#                    <td>{{ destination.FriendlyName }}</td>#}
+{#                    <td>{{ destination.Type }}</td>#}
+{#                    <td>{{ destination.Folder }}</td>#}
+{#                    <td>{{ destination.Host }}</td>#}
+{#                    <td>{{ destination.Backup_Limit }}</td>#}
+{#                    <td><a href="{{ reverse_url("System_Backup_Index", destination.ID) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a></td>#}
+{#                </tr>#}
+{#                {% end %}#}
+{#            {% end %}#}
+{#            </tbody>#}
+{#        </table>#}
     </div>
 </div>
 <script src="../../static/js/jquery.min.js"></script>
 <script src="../../static/js/bootstrap.min.js"></script>
+
+<script>
+    $(function(){
+        $("#add_local_submit").click(function(){
+            var destination_name = $("#add_local_friendlyname").val();
+            var folder = $("#add_local_folder").val();
+            var backup_limit = $("#add_local_backup_limit").val();
+        })
+    })
+</script>
+
 {% include "includes/footer.template" %}
 </body>
 </html>

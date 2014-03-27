@@ -150,24 +150,78 @@
 
         statusTable.on('click', '.kick-player', function(){
             var player = $(this).attr('username');
-            $.post('{{ reverse_url('Server_Ajax_KickPlayer', server_id) }}', {"player": player})
+            $.post('{{ reverse_url('Server_Ajax_KickPlayer', server_id) }}', {"player": player}).done(function(data){
+                $.pnotify({
+                    title: 'Kicked Player',
+                    text: 'Successfully kicked ' + player,
+                    type: 'success',
+                    history: false
+                })
+            }).fail(function(data){
+                $.pnotify({
+                    title: 'Error',
+                    text: 'Failed to kick ' + player + '\r\nMessage: ' + data['responseJSON']['result']['message'],
+                    type: 'error',
+                    history: false
+                })
+            })
         });
 
         statusTable.on('click', '.ban-player', function(){
             var player = $(this).attr('username');
-            $.post('{{ reverse_url('Server_Ajax_BanPlayer', server_id) }}', {"player": player})
+            $.post('{{ reverse_url('Server_Ajax_BanPlayer', server_id) }}', {"player": player}).done(function(data){
+                $.pnotify({
+                    title: 'Banned Player',
+                    text: 'Successfully banned ' + player,
+                    type: 'success',
+                    history: false
+                })
+            }).fail(function(data){
+                $.pnotify({
+                    title: 'Error',
+                    text: 'Failed to ban ' + player + '\r\nMessage: ' + data['responseJSON']['result']['message'],
+                    type: 'error',
+                    history: false
+                })
+            })
         });
 
         bannedPlayersTable.on('click', '.unban-player', function(){
             $.post('{{ reverse_url('Server_Ajax_UnbanPlayer', server_id) }}', {"player": $(this).attr('username')}).done(function(data){
+                $.pnotify({
+                    title: 'Unbanned Player',
+                    text: 'Successfully unbanned ' + $(this).attr('username'),
+                    type: 'success',
+                    history: false
+                });
                 setTimeout(refreshBannedPlayers, 50)
+            }).fail(function(data){
+                $.pnotify({
+                    title: 'Error',
+                    text: 'Failed to unban ' + $(this).attr('username') + '\r\nMessage: ' + data['responseJSON']['result']['message'],
+                    type: 'error',
+                    history: false
+                })
             })
         });
 
         operatorsTable.on('click', '.deop-player', function(){
             $.post('{{ reverse_url('Server_Ajax_DeopPlayer', server_id) }}', {"player": $(this).attr('username')}).done(function(data){
+                $.pnotify({
+                    title: 'Deop\'d Player',
+                    text: 'Successfully deop\'d ' + $(this).attr('username'),
+                    type: 'success',
+                    history: false
+                });
                 setTimeout(refreshOperators, 50)
-            });
+            }).fail(function(data){
+                $.pnotify({
+                    title: 'Error',
+                    text: 'Failed to deop ' + $(this).attr('username') + '\r\nMessage: ' + data['responseJSON']['result']['message'],
+                    type: 'error',
+                    history: false
+                })
+            })
         });
 
         function autoRefreshPlayers(){
