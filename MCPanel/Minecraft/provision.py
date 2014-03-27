@@ -150,7 +150,6 @@ class Bukkit:
         build = str(build_info['build_number'])
         with open(os.path.dirname(handler.application.config.config_file) + '/bukkit_jar_cache/versions.json', 'r') as f:
             versions = json.load(f)
-        print versions
         if not str(build) in versions['builds']:
             request = urllib2.urlopen('http://dl.bukkit.org' + build_info['file']['url'])
             with open(home + '/minecraft.jar', 'wb') as f:
