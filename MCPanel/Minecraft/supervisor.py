@@ -50,3 +50,7 @@ class Supervisor:
             config.write(f)
         self.server.supervisor.reloadConfig()  # undocumented feature :(
         self.server.supervisor.addProcessGroup(process_name) # also undocumented quirk which will auto start the server!
+
+    def edit_memory(self, process_name, config_directory):
+        config = ConfigParser.RawConfigParser()
+        filename = os.path.join(config_directory, 'conf.d', process_name + '.conf')

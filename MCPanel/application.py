@@ -54,6 +54,7 @@ import Handlers.System.Backup.Index
 import Handlers.System.Backup.Ajax.DeleteBackup
 import Handlers.Servers.Server.Ajax.BackupServer
 import Handlers.Servers.Server.Ajax.DeleteBackup
+import Handlers.Servers.Server.Settings
 
 
 class Application(tornado.web.Application):
@@ -119,6 +120,7 @@ class Application(tornado.web.Application):
             ('System_Backup_Ajax_DeleteBackup', r'/system/backup/(\d+)/ajax/deleteBackup', Handlers.System.Backup.Ajax.DeleteBackup.DeleteBackupHandler),
             ('Server_Ajax_BackupServer', r'/servers/(\d+)/ajax/backupServer', Handlers.Servers.Server.Ajax.BackupServer.BackupServerHandler),
             ('Server_Ajax_DeleteBackup', r'/servers/(\d+)/ajax/deleteBackup', Handlers.Servers.Server.Ajax.DeleteBackup.DeleteBackupHandler),
+            ('Server_Settings', r'/servers/(\d+)/settings', Handlers.Servers.Server.Settings.ServerSettingsHandler),
         ]
         handlers = [URLSpec(pattern, handler, name=name) for name, pattern, handler in handlers]
         settings = dict(

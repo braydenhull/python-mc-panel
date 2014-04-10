@@ -196,7 +196,6 @@
                                 <li>Remove all world data;</li>
                                 <li>Remove the Linux user associated with this server;</li>
                                 <li>Remove all configuration associated with the server; and</li>
-                                <li>Remove all references from the database</li>
                             </ul>
                             <p>Please ensure all data is backed up before proceeding.</p>
                             <input type="hidden" id="deleteServerModalServerID">

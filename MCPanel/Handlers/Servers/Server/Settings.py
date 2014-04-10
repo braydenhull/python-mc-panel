@@ -5,8 +5,8 @@ from tornado.web import authenticated
 from Base import BaseServerHandler
 
 
-class ServerUpdateHandler(BaseServerHandler):
+class ServerSettingsHandler(BaseServerHandler):
     @asynchronous
     @authenticated
     def get(self, server_id):
-        self.render(self.application.settings['template_path'] + '/servers/server/update.template', server_id=server_id)
+        self.render(self.application.settings['template_path'] + '/servers/server/settings.template', server_id=server_id)

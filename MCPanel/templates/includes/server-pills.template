@@ -6,5 +6,6 @@
             <li id="{{ handler.application.named_handlers['Server_Properties'].handler_class.__name__ }}"><a href="{{ reverse_url("Server_Properties", server_id) }}"><i class="fa fa-edit"></i> Properties</a></li>
             <li id="{{ handler.application.named_handlers['Server_Update'].handler_class.__name__ }}"><a href="{{ reverse_url("Server_Update", server_id) }}"><i class="fa fa-arrow-up"></i> Update</a></li>
             <li id="{{ handler.application.named_handlers['Server_Backup'].handler_class.__name__ }}"><a href="{{ reverse_url("Server_Backup", server_id) }}"><i class="fa fa-copy"></i> Backup</a></li>
+            <li id="{{ handler.application.named_handlers['Server_Settings'].handler_class.__name__ }}"><a href="{{ reverse_url("Server_Settings", server_id) }}"><i class="fa fa-wrench"></i> Settings</a></li>
         </ul>
     </div>
