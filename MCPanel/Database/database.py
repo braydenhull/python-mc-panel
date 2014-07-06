@@ -155,10 +155,13 @@ class Database():
     def get_server_id(self, address, port):
         return self.Servers.select().where(self.Servers.Address == address, self.Servers.Port == port, self.Servers.Is_Active == True).get().ID
 
-    def is_address_taken(self, address, port):
+    def is_address_taken(self, address, port, no_match_all=False):
         try:
             if address == '0.0.0.0':
-                self.Servers.select().where(self.Servers.Port == port, self.Servers.Is_Active == True).get()
+                if no_match_all:
+                    self.Servers.select().where(self.Servers.Port ==  port, self.Servers.Address != address, self.Servers.Is_Active == True).get()
+                else:
+                    self.Servers.select().where(self.Servers.Port == port, self.Servers.Is_Active == True).get()
             else:
                 self.Servers.select().where(self.Servers.Address == address, self.Servers.Port == port, self.Servers.Is_Active == True).get()
             return True
@@ -243,3 +246,12 @@ class Database():
 
     def set_local_backup_settings(self, destination_id, friendly_name, folder, backup_limit):
         self.Backup_Destinations.update(FriendlyName=friendly_name, Folder=folder, Backup_Limit=backup_limit).where(self.Backup_Destinations.ID == destination_id).execute()
+
+    def edit_memory(self, server_id, new_amount):
+        self.Servers.update(Memory=new_amount).where(self.Servers.ID == server_id).execute()
+
+    def edit_port(self, server_id, new_port):
+        self.Servers.update(Port=new_port).where(self.Servers.ID == server_id).execute()
+
+    def edit_address(self, server_id, new_address):
+        self.Servers.update(Address=new_address).where(self.Servers.ID == server_id).execute()
