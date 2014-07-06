@@ -101,6 +101,8 @@ class Bukkit:
 
             os.chown(self.home + '/server.properties', pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_uid, pwd.getpwnam(self.ws.application.process_prefix + str(self.ws.server_id)).pw_gid)
             os.chmod(self.home + '/server.properties', 0600)
+            with open(self.home + '/eula.txt', 'w') as f: # seriously this is retarded, Mojang. I know EULAs are important but how about making players agree to a combined server/client EULA on first start of Minecraft?
+                f.write("eula=true")
 
             with open(os.path.dirname(self.ws.application.config.config_file) + '/bukkit_jar_cache/versions.json', 'r') as f:
                 self.versions = json.load(f)
@@ -338,6 +340,9 @@ class Vanilla:
                 f.write("enable-query=true\r\n")  # enable the query API to get player listings
                 f.write("server-ip=" + self.args['address'] + "\r\n")
                 f.write("server-port=" + self.args['port'] + "\r\n")
+
+            with open(self.home + '/eula.txt', 'w') as f: # seriously this is retarded, Mojang. I know EULAs are important but how about making players agree to a combined server/client EULA on first start of Minecraft?
+                f.write("eula=true")
 
             os.chown(self.home + '/server.properties', pwd.getpwnam(self.handler.application.process_prefix + str(self.handler.server_id)).pw_uid, pwd.getpwnam(self.handler.application.process_prefix + str(self.handler.server_id)).pw_gid)
             os.chmod(self.home + '/server.properties', 0600)
