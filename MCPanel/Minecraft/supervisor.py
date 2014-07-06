@@ -3,6 +3,7 @@ __author__ = 'brayden'
 import xmlrpclib
 import ConfigParser
 import os
+import re
 
 
 class Supervisor:
@@ -51,6 +52,26 @@ class Supervisor:
         self.server.supervisor.reloadConfig()  # undocumented feature :(
         self.server.supervisor.addProcessGroup(process_name) # also undocumented quirk which will auto start the server!
 
-    def edit_memory(self, process_name, config_directory):
+    def edit_memory(self, process_name, config_directory, memory, restart_server=False):
+        memory = str(memory)
         config = ConfigParser.RawConfigParser()
         filename = os.path.join(config_directory, 'conf.d', process_name + '.conf')
+        if not os.path.exists(filename):
+            raise Exception
+
+        config.read(filename)
+        environment = re.sub('MEM="[0-9]+"', 'MEM="' + memory + '"', config.get('program:%s' % process_name, 'environment'))
+        config.set('program:%s' % process_name, 'environment', environment)
+        with open(os.path.join(config_directory, 'conf.d', process_name + '.conf'), 'w') as f:
+            config.write(f)
+
+        if restart_server:
+            self.refresh(process_name)
+
+    def refresh(self, process_name): # certain changes like changes to environment won't be visible, even after reload. this is just necessary to get it to see changes without restarting the whole daemon and crashing all instances
+        self.server.supervisor.reloadConfig()
+        if self.is_process_running(process_name):
+            self.stop_process(process_name)
+
+        self.server.supervisor.removeProcessGroup(process_name)
+        self.server.supervisor.addProcessGroup(process_name)

@@ -13,20 +13,41 @@
     {% include "includes/server-pills.template" %}
     {% set server = handler.application.db.get_server(server_id) %}
     <div class="col-md-10">
+        {% if message != '' %}
+            {% if not error %}
+                {% set alert = "alert-success" %}
+            {% else %}
+                {% set alert = "alert-danger" %}
+            {% end %}
+            <div class="alert {{ alert }}">
+                <p>{{ message }}</p>
+            </div>
+        {% end %}
         <div class="col-md-7">
-            <h4><button type="button" class="btn btn-success">Save</button> Server Settings</h4>
-            <form class="form-horizontal" role="form">
+            <form class="form-horizontal" role="form" method="post">
+                <h4><button type="submit" class="btn btn-success">Save</button> Server Settings</h4>
                 <div class="form-group">
                     <label class="col-md-3 control-label" for="address">Address</label>
-                    <div class="col-md-4"><input type="text" id="address" class="form-control" placeholder="Address" value="{{ server.Address }}"></div>
+                    <div class="col-md-4">
+                        <select id="address" name="address" class="form-control">
+                        {% for interface in interfaces %}
+                            {% if interface == server.Address %}
+                                <option selected="">{{ interface }}</option>
+                            {% else %}
+                                <option>{{ interface }}</option>
+                            {% end %}
+                        {% end %}
+                            <option>0.0.0.0</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label class="col-md-3 control-label" for="port">Port</label>
-                    <div class="col-md-4"><input type="number" id="port" class="form-control" placeholder="Port" value="{{ server.Port }}"></div>
+                    <div class="col-md-4"><input name="port" type="number" id="port" class="form-control" placeholder="Port" value="{{ server.Port }}"></div>
                 </div>
                 <div class="form-group">
                     <label class="col-md-3 control-label" for="memory">Memory (MB)</label>
-                    <div class="col-md-4"><input type="number" id="memory" class="form-control" placeholder="Memory" value="{{ server.Memory }}"></div>
+                    <div class="col-md-4"><input name="memory" type="number" id="memory" class="form-control" placeholder="Memory" value="{{ server.Memory }}"></div>
                 </div>
             </form>
         </div>
