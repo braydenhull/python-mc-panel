@@ -120,8 +120,8 @@ class Database():
             self.Users.select().execute()
         except:
             self.initialiseDatabase()
-            self.add_user('Admin', 'admin', True)
-            print "Database initialised. Login is: \r\nUsername: Admin\r\nPassword: admin"
+            # self.add_user('Admin', 'admin', True)
+            # print "Database initialised. Login is: \r\nUsername: Admin\r\nPassword: admin"
 
     def initialiseDatabase(self):  # if param is true it'll suppress errors
         self.Servers.create_table(True)
@@ -132,9 +132,9 @@ class Database():
         self.User_Roles.create_table(True)
         self.Backup_Destinations.create_table(True)
 
-    def add_user(self, username, password, is_admin=False):
-        password = passlib.hash.sha1_crypt.encrypt(password, rounds=self.rounds)
-        self.Users.create(Username=escape.xhtml_escape(username), Password=password, Is_Admin=is_admin, force_insert=True)
+    # def add_user(self, username, password, is_admin=False):
+    #     password = passlib.hash.sha1_crypt.encrypt(password, rounds=self.rounds)
+    #     self.Users.create(Username=escape.xhtml_escape(username), Password=password, Is_Admin=is_admin, force_insert=True)
 
     def add_server(self, address, port, memory, owner, stream, server_type="craftbukkit"):
         self.Servers.create(Address=address, Port=port, Memory=memory, Owner=owner, ServerJar='minecraft.jar', Type=server_type, Stream=stream, Is_Active=True)
@@ -168,18 +168,18 @@ class Database():
         except DoesNotExist:
             return False
 
-    def insert_session(self, username, session):
-        self.Users.update(Session=session).where(self.Users.Username == username).execute()
+    # def insert_session(self, username, session):
+    #     self.Users.update(Session=session).where(self.Users.Username == username).execute()
 
     def ping(self):
         self.database.execute_sql('/* ping */ SELECT 1')  # Ping the database
 
-    def get_session(self, username):
-        return self.Users.select(self.Users.Session).where(self.Users.Username == username).get().Session
+    # def get_session(self, username):
+    #     return self.Users.select(self.Users.Session).where(self.Users.Username == username).get().Session
 
-    def check_credentials(self, username, password):
-        password_hash = self.Users.select(self.Users.Password).where(self.Users.Username == username).get().Password
-        return passlib.hash.sha1_crypt.verify(password, password_hash)
+    # def check_credentials(self, username, password):
+    #     password_hash = self.Users.select(self.Users.Password).where(self.Users.Username == username).get().Password
+    #     return passlib.hash.sha1_crypt.verify(password, password_hash)
 
     def add_role(self, role_name):
         self.Roles.create(RoleName=role_name)
@@ -196,43 +196,43 @@ class Database():
     def get_role_permissions(self, role_id):
         return self.Role_Permissions().where(self.Role_Permissions.Role_ID == role_id).get()
 
-    def is_user_admin(self, user):
-        return self.Users.select(self.Users.Is_Admin).where(self.Users.Username == user).get().Is_Admin
+    # def is_user_admin(self, user):
+    #     return self.Users.select(self.Users.Is_Admin).where(self.Users.Username == user).get().Is_Admin
 
-    def get_users(self):
-        return self.Users.select()
+    # def get_users(self):
+    #     return self.Users.select()
 
-    def delete_user(self, user):
-        (self.Users.get(self.Users.Username == user)).delete_instance()
+    # def delete_user(self, user):
+    #     (self.Users.get(self.Users.Username == user)).delete_instance()
 
     def delete_server(self, server_id):
         self.Servers.update(Is_Active = False).where(self.Servers.ID == server_id).execute()
 
-    def edit_user(self, username, password=None, api_key=None, session=None, is_admin=None):
-        user = self.Users()
-        user.Username = username
-        if type(password) is unicode:
-            user.Password = passlib.hash.sha1_crypt.encrypt(password, rounds=self.rounds)
-        if type(api_key) is unicode:
-            user.API_Key = api_key
-        if type(session) is unicode:
-            user.Session = session
-        if type(is_admin) is bool:
-            user.Is_Admin = is_admin
-
-        user.save()
-
-    def change_password(self, username, new_password):
-        self.Users.update(Password=passlib.hash.sha1_crypt.encrypt(new_password, rounds=self.rounds)).where(self.Users.Username == username).execute()
+    # def edit_user(self, username, password=None, api_key=None, session=None, is_admin=None):
+    #     user = self.Users()
+    #     user.Username = username
+    #     if type(password) is unicode:
+    #         user.Password = passlib.hash.sha1_crypt.encrypt(password, rounds=self.rounds)
+    #     if type(api_key) is unicode:
+    #         user.API_Key = api_key
+    #     if type(session) is unicode:
+    #         user.Session = session
+    #     if type(is_admin) is bool:
+    #         user.Is_Admin = is_admin
+    #
+    #     user.save()
+    #
+    # def change_password(self, username, new_password):
+    #     self.Users.update(Password=passlib.hash.sha1_crypt.encrypt(new_password, rounds=self.rounds)).where(self.Users.Username == username).execute()
 
     def get_backup_destinations(self):
         return self.Backup_Destinations.select()
 
-    def add_backup_destination(self, friendly_name, backup_type, folder, host=None, remote=False):
+    def add_backup_destination(self, friendly_name, backup_type, folder, host=None, remote=False, backup_limit=0):
         if remote:
-            self.Backup_Destinations.create(FriendlyName = friendly_name, Type=backup_type, Folder=folder, Host=host, Remote=remote)
+            self.Backup_Destinations.create(FriendlyName = friendly_name, Type=backup_type, Folder=folder, Host=host, Remote=remote, Backup_Limit=backup_limit)
         else:
-            self.Backup_Destinations.create(FriendlyName = friendly_name, Type=backup_type, Folder=folder, Host=None, Remote=remote)
+            self.Backup_Destinations.create(FriendlyName = friendly_name, Type=backup_type, Folder=folder, Host=None, Remote=remote, Backup_Limit=backup_limit)
 
     def backup_destination_exists(self, destination_id):
         try:

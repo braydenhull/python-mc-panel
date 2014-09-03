@@ -7,8 +7,6 @@ import tornado.escape
 import os
 import subprocess
 import tornado.ioloop
-from tornado.websocket import WebSocketClosedError
-
 
 class GetLogHandler(BaseServerWebSocketHandler):
     def open(self, server_id):
@@ -25,8 +23,8 @@ class GetLogHandler(BaseServerWebSocketHandler):
                     username = (((session.split('|')[0])).decode('hex').decode('utf-8')).strip()
                     hash = session.split('|')[1]
                     try:
-                        if self.application.check_session(username, hash):
-                            if self.application.db.get_server(self.server_id).Owner == username or self.application.db.is_user_admin(username):
+                        if self.application.authentication.check_session(username, hash):
+                            if self.application.db.get_server(self.server_id).Owner == username or self.application.authentication.is_user_admin(username):
                                 self.auth = True
                             else:
                                 self.write_message({"success": False, "message": "Required permissions not present."})

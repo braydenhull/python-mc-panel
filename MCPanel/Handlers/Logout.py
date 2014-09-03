@@ -10,5 +10,5 @@ class LogoutHandler(BaseHandler):
     @authenticated
     def get(self):
         self.clear_all_cookies()
-        self.application.make_session(self.current_user)
+        self.application.authentication.make_session(self.current_user)
         self.redirect(self.application.settings['login_url'])

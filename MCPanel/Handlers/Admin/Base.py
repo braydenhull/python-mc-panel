@@ -6,5 +6,6 @@ from peewee import DoesNotExist
 
 
 class BaseAdminHandler(BaseHandler):
-    def prepare(self):
-        self.if_admin()
+    pass
+    # def prepare(self): # not necessary now with the decorator
+    #     self.if_admin()

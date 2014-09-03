@@ -1,7 +1,5 @@
 __author__ = 'brayden'
 
-import socket
-
 
 class ShortStatus:
     def __init__(self, address, port, timeout=2):

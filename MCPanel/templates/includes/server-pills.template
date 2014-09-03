@@ -3,6 +3,7 @@
             <li id="{{ handler.application.named_handlers['Server_Index'].handler_class.__name__ }}"><a href="{{ reverse_url("Server_Index", server_id) }}"><i class="fa fa-dashboard"></i> Dashboard</a></li>
             <li id="{{ handler.application.named_handlers['Server_Players'].handler_class.__name__ }}"><a href="{{ reverse_url("Server_Players", server_id) }}"><i class="fa fa-users"></i> Players</a></li>
             <li id="{{ handler.application.named_handlers['Server_Console'].handler_class.__name__ }}"><a href="{{ reverse_url("Server_Console", server_id) }}"><i class="fa fa-terminal"></i> Console</a></li>
+            <li id=""><a href="#"><i class="fa fa-sitemap"></i> Connections</a></li>
             <li id="{{ handler.application.named_handlers['Server_Properties'].handler_class.__name__ }}"><a href="{{ reverse_url("Server_Properties", server_id) }}"><i class="fa fa-edit"></i> Properties</a></li>
             <li id="{{ handler.application.named_handlers['Server_Update'].handler_class.__name__ }}"><a href="{{ reverse_url("Server_Update", server_id) }}"><i class="fa fa-arrow-up"></i> Update</a></li>
             <li id="{{ handler.application.named_handlers['Server_Backup'].handler_class.__name__ }}"><a href="{{ reverse_url("Server_Backup", server_id) }}"><i class="fa fa-copy"></i> Backup</a></li>

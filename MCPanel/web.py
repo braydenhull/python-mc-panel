@@ -3,13 +3,11 @@ __author__ = 'brayden'
 import tornado.ioloop
 import tornado.options
 import tornado.httpserver
-import tornado.web
 import tornado
-import os
 from application import Application
 from Config import config
 
-# Copyright (c) 2013, Brayden Hull
+# Copyright (c) 2014, Brayden Hull
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without

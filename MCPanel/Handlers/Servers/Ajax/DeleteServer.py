@@ -8,6 +8,7 @@ from Minecraft.provision import Bukkit
 import tornado.iostream
 from multiprocessing.pool import ThreadPool
 import tornado.ioloop
+from Handlers.Base import admin
 
 _workers = ThreadPool(10)
 
@@ -15,8 +16,9 @@ _workers = ThreadPool(10)
 class DeleteServerHandler(BaseServersAjaxHandler):
     @asynchronous
     @authenticated
+    @admin
     def post(self):
-        self.if_admin() # admin only function
+        #self.if_admin() # admin only function
         try:
             server = self.application.db.get_server(int(self.get_argument('server_id')))
             if server.Type == "craftbukkit" or server.Type == "vanilla":

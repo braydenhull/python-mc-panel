@@ -15,7 +15,7 @@ class UserIndexHandler(BaseUserHandler):
 
     def post(self):
         if self.get_argument('method') == 'changePassword':
-            self.application.db.change_password(self.current_user, new_password=self.get_argument('new_password'))
+            self.application.authentication.change_password(self.current_user, self.get_argument('new_password'))
             self.render(self.application.settings['template_path'] + '/user/index.template', message='Successfully changed password')
         else:
             self.render(self.application.settings['template_path'] + '/user/index.template', message='Specified method does not match any known method.')

@@ -130,3 +130,7 @@ class Local:
                         backup_zip.write(root + '/' + filename)
 
         self._add_backup(server_name, file_path, time_now)
+
+    @staticmethod
+    def add_destination(folder):
+        os.mkdir(folder)

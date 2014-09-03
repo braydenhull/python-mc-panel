@@ -10,6 +10,7 @@ class StopServerHandler(BaseServersAjaxHandler):
     @authenticated
     def post(self):
         if 'server_id' in self.request.arguments and 'force' in self.request.arguments:
+            self.can_view_server(self.get_argument('server_id'))
             if self.application.supervisor.is_process_running(self.application.process_prefix + self.get_argument('server_id')):
                 if self.get_argument('force') == "true":
                     self.finish({"result": {"message": None, "success": self.application.supervisor.stop_process(self.application.process_prefix + self.get_argument('server_id'))}})

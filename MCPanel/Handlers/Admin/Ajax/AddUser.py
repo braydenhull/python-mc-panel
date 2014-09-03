@@ -3,11 +3,13 @@ __author__ = 'brayden'
 from tornado.web import asynchronous
 from tornado.web import authenticated
 from Base import BaseAdminAjaxHandler
+from Handlers.Base import admin
 
 
 class AddUserHandler(BaseAdminAjaxHandler):
     @asynchronous
     @authenticated
+    @admin
     def post(self):
         if all(k in self.request.arguments for k in ("username", "password", "is_admin")):
             try:
@@ -15,7 +17,7 @@ class AddUserHandler(BaseAdminAjaxHandler):
                     is_admin = True
                 else:
                     is_admin = False
-                self.application.db.add_user(self.get_argument('username'), self.get_argument('password'),
+                self.application.authentication.add_user(self.get_argument('username'), self.get_argument('password'),
                                             is_admin=is_admin)
                 self.application.generate_username_cache()
                 self.finish({'result': {'success': True, 'message': 'User was successfully created.'}})

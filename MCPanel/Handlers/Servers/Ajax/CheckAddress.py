@@ -3,11 +3,13 @@ __author__ = 'brayden'
 from tornado.web import asynchronous
 from tornado.web import authenticated
 from Base import BaseServersAjaxHandler
+from Handlers.Base import admin
 
 
 class CheckAddressHandler(BaseServersAjaxHandler):
     @asynchronous
     @authenticated
+    @admin
     def post(self):
         if 'port' in self.request.arguments and 'address' in self.request.arguments:
             if int(self.get_argument('port')) > 65535 or int(self.get_argument('port')) < 1:

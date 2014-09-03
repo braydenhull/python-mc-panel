@@ -76,7 +76,7 @@ class Bukkit:
 
     def get_download_url(self):
         details = self._get_build_info()
-        return {'URL': 'http://dl.bukkit.org' + details['file']['url'], 'MD5': details['file']['checksum_md5'], 'Size': details['file']['size'], 'Filename': details['target_filename'], 'Downloads': details['download_count'], 'Created': details['created']}
+        return {'URL': details['file']['url'], 'MD5': details['file']['checksum_md5'], 'Size': details['file']['size'], 'Filename': details['target_filename'], 'Downloads': details['download_count'], 'Created': details['created']}
 
     def install(self, ws, **kwargs):
         self.args = kwargs
@@ -113,6 +113,7 @@ class Bukkit:
             else:
                 try:
                     self.ws.write_message({"message": "Starting Bukkit download.", "success": True, "complete": False})
+                    print self.get_download_url()
                     client.fetch(self.get_download_url()['URL'], self._cb_download_handler, user_agent=self.user_agent, request_timeout=99999)  # if request_timeout isn't used, it'll die if it can't download fast enough
                 except self.BukkitProvisionError as e:
                     self.ws.write_message({"message": "Encountered an error. %s: %s" % (e.name, e.message), "success": False, "complete": False})

@@ -75,7 +75,7 @@
                             <label>
                                 Server Owner
                                 <select id="serverOwner" class="form-control">
-                                    {% for user in handler.application.db.get_users() %}
+                                    {% for user in handler.application.authentication.get_users() %}
                                         {% if user.Username == current_user %}
                                         <option selected="">{{ user.Username }}</option>
                                         {% else %}

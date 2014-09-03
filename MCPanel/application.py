@@ -3,7 +3,8 @@ __author__ = 'brayden'
 import tornado
 import os
 import hashlib
-import Database.database
+import Libs.database
+import Libs.authentication
 import ConfigParser
 import json
 from tornado.web import URLSpec
@@ -60,7 +61,8 @@ import Handlers.Servers.Server.Settings
 class Application(tornado.web.Application):
     def __init__(self):
         self.config = config()
-        self.db = Database.database.Database()
+        self.db = Libs.database.Database()
+        self.authentication = Libs.authentication.Authentication(self)
         self.session_cache = {}
         self.title = self.config.get('panel', 'title')
         self.name = self.config.get('panel', 'name')
@@ -140,30 +142,30 @@ class Application(tornado.web.Application):
         else:
             raise tornado.web.HTTPError(403)
 
-    def make_session(self, username):
-        session = hashlib.sha256(os.urandom(32)).hexdigest()
-        self.session_cache[username] = session
-        self.db.insert_session(username, session)
-        return session
+    # def make_session(self, username):
+    #     session = hashlib.sha256(os.urandom(32)).hexdigest()
+    #     self.session_cache[username] = session
+    #     self.db.insert_session(username, session)
+    #     return session
 
-    def check_session(self, username, session):
-        if 'username' in self.session_cache:
-            if self.session_cache[username] == session:
-                return True
-            else:
-                return False
-        else:  # not cached, due to daemon restart? fallback onto more expensive method
-            if self.db.get_session(username) == session:
-                self.session_cache[username] = session  # push it into the cache
-                return True
-            else:
-                return False
+    # def check_session(self, username, session):
+    #     if 'username' in self.session_cache:
+    #         if self.session_cache[username] == session:
+    #             return True
+    #         else:
+    #             return False
+    #     else:  # not cached, due to daemon restart? fallback onto more expensive method
+    #         if self.db.get_session(username) == session:
+    #             self.session_cache[username] = session  # push it into the cache
+    #             return True
+    #         else:
+    #             return False
 
     def db_ping(self):
         self.db.ping()
 
     def generate_username_cache(self):
-        users = self.db.get_users()
+        users = self.authentication.get_users()
         for user in users:
             self.usernames[user.Username] = {'Is_Admin': user.Is_Admin}
 

@@ -1,3 +1,5 @@
+import functools
+
 __author__ = 'brayden'
 
 import tornado.web
@@ -15,7 +17,7 @@ class BaseHandler(tornado.web.RequestHandler):
                 username = (((cookie.split('|')[0])).decode('hex').decode('utf-8')).strip()
                 session = cookie.split('|')[1]
                 try:
-                    if self.application.check_session(username, session):
+                    if self.application.authentication.check_session(username, session):
                         return username
                 except DoesNotExist:
                     return None
@@ -35,7 +37,7 @@ class BaseHandler(tornado.web.RequestHandler):
         try:
             if self.current_user is None:
                 self.redirect(self.application.settings['login_url'])
-            elif not self.application.db.is_user_admin(self.current_user):
+            elif not self.application.authentication.is_user_admin(self.current_user):
                 raise HTTPError(403)
         except DoesNotExist as e:
             raise HTTPError(403)
@@ -43,8 +45,21 @@ class BaseHandler(tornado.web.RequestHandler):
     def can_view_server(self, server_id):
         if self.current_user in self.application.usernames:
             try:
-                if not self.application.db.is_user_admin(self.current_user):
-                    if not self.application.db.get_server(server_id).Owner == self.current_user:
+                if not self.application.authentication.is_user_admin(self.current_user):
+                    if not self.application.authentication.get_server(server_id).Owner == self.current_user:
                         raise HTTPError(403)
             except DoesNotExist:
                 raise HTTPError(403)
+
+def admin(method):
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        try:
+            if self.current_user is None:
+                self.redirect(self.application.settings['login_url'])
+            elif not self.application.authentication.is_user_admin(self.current_user):
+                raise HTTPError(403)
+        except DoesNotExist:
+            raise HTTPError(403)
+        return method(self, *args, **kwargs)
+    return wrapper

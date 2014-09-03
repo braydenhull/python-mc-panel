@@ -9,13 +9,13 @@
     <link href="../../../static/css/jquery.pnotify.default.css" rel="stylesheet" media="screen">
     <meta charset="UTF-8">
 </head>
-{% include "includes/navbar.template" %}
 <body>
+{% include "includes/navbar.template" %}
 <div class="container" style="padding-top: 25px;">
     {% include "includes/server-pills.template" %}
     <div class="col-md-10">
         <p>This will update, if necessary, the server to the latest build available in the selected stream.</p>
-        <strong id="currentVersion">Current version: ()</strong><br>
+        <strong id="currentVersion">Current Version: ()</strong><br>
         <strong id="newVersion">Newest Version: ()</strong><br><br>
         <form class="form-inline">
             <button type="button" class="btn btn-success" id="updateServer"><i class="fa fa-refresh" id="refresh"></i> Update Server</button>

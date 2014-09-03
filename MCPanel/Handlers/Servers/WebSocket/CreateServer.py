@@ -23,8 +23,8 @@ class CreateServerHandler(BaseWebSocketHandler):
                 username = (((session.split('|')[0])).decode('hex').decode('utf-8')).strip()
                 hash = session.split('|')[1]
                 try:
-                    if self.application.check_session(username, hash):
-                        if self.application.db.is_user_admin(username):
+                    if self.application.authentication.check_session(username, hash):
+                        if self.application.authentication.is_user_admin(username):
                             auth = True  # so much nesting!
                         else:
                             self.write_message({"success": False, "message": "Required permissions not present.", "complete": False})
@@ -57,5 +57,4 @@ class CreateServerHandler(BaseWebSocketHandler):
                 else:
                     self.write_message({"success": False, "message": "IP/Port combination already taken.", "complete": False})
         except ValueError or KeyError:
-            print message
             self.write_message({"success": False, "message": "Not well formatted message.", "complete": False})

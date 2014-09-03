@@ -40,12 +40,13 @@
             </tbody>
         </table>
 
-        <div class="form-group">
-            <label>Friendly Name <input style="width: 300px;" class="form-control" type="text" placeholder="My Backup Destination" id="add_local_friendlyname"></label>
-            <label>Folder <input class="form-control" type="text" style="width: 600px;" placeholder="/backup/mybackuplocation/" id="add_local_folder"></label>
-            <label>Backup Limit <input id="add_local_backup_limit" type="number" class="form-control" placeholder="20"></label>
-            <button type="button" class="btn btn-success" id="add_local_submit">Add New Destination</button>
-        </div>
+        <form class="form-group" method="post">
+            <label>Friendly Name <input style="width: 300px;" class="form-control" type="text" placeholder="My Backup Destination" id="add_local_friendlyname" name="friendly_name"></label>
+            <label>Folder <input class="form-control" type="text" style="width: 600px;" placeholder="/backup/mybackuplocation/" id="add_local_folder" name="folder"></label>
+            <label>Backup Limit <input id="add_local_backup_limit" type="number" class="form-control" name="backup_limit" placeholder="20"></label>
+            <input type="hidden" name="remote" value="false">
+            <button type="submit" class="btn btn-success" id="add_local_submit">Add New Destination</button>
+        </form>
 
 {#        <h2>Remote</h2>#}
 {#        <table class="table table-bordered">#}
