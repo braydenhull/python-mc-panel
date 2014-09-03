@@ -1,6 +1,6 @@
 __author__ = 'brayden'
 
-from Base import BaseServerWebSocketHandler
+from . import BaseServerWebSocketHandler
 import json
 from peewee import DoesNotExist
 import tornado.escape

@@ -2,7 +2,7 @@ __author__ = 'brayden'
 
 from tornado.web import asynchronous
 from tornado.web import authenticated
-from Base import BaseServersAjaxHandler
+from . import BaseServersAjaxHandler
 
 
 class StopServerHandler(BaseServersAjaxHandler):

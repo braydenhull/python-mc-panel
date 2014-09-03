@@ -3,7 +3,7 @@ __author__ = 'brayden'
 from tornado.web import asynchronous
 from tornado.web import authenticated
 from tornado.ioloop import IOLoop
-from Base import BaseServerAjaxHandler
+from . import BaseServerAjaxHandler
 from Minecraft.backup import Local
 from functools import partial
 from datetime import timedelta

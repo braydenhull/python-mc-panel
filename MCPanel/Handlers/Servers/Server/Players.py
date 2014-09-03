@@ -2,8 +2,7 @@ __author__ = 'brayden'
 
 from tornado.web import asynchronous
 from tornado.web import authenticated
-from Base import BaseServerHandler
-from tornado.web import HTTPError
+from . import BaseServerHandler
 from Minecraft.status import ShortStatus
 
 

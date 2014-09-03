@@ -1,6 +1,6 @@
 __author__ = 'brayden'
 
-from Base import BaseSystemHandler
+from . import BaseSystemHandler
 from tornado.web import asynchronous
 from tornado.web import authenticated
 from Minecraft.backup import Local

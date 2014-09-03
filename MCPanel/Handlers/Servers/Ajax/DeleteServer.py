@@ -2,13 +2,13 @@ __author__ = 'brayden'
 
 from tornado.web import asynchronous
 from tornado.web import authenticated
-from Base import BaseServersAjaxHandler
+from . import BaseServersAjaxHandler
 from peewee import DoesNotExist
 from Minecraft.provision import Bukkit
 import tornado.iostream
 from multiprocessing.pool import ThreadPool
 import tornado.ioloop
-from Handlers.Base import admin
+from Handlers import admin
 
 _workers = ThreadPool(10)
 

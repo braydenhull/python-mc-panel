@@ -11,11 +11,9 @@ from tornado.web import URLSpec
 from Config import config
 from Minecraft.supervisor import Supervisor
 import Handlers
-import Handlers.Index
-import Handlers.Login
+import Handlers.Home
 import Handlers.Ajax
 import Handlers.Ajax.PerformLogin
-import Handlers.Logout
 import Handlers.Admin.Index
 import Handlers.Admin.Users
 import Handlers.Admin.Roles
@@ -79,10 +77,10 @@ class Application(tornado.web.Application):
         self.setup_vanilla_jar_cache()
         self.vanilla_builds = {}
         handlers = [
-            ('Home', r'/', Handlers.Index.IndexHandler),
-            ('Login', r'/login', Handlers.Login.LoginHandler),
+            ('Home', r'/', Handlers.Home.IndexHandler),
+            ('Login', r'/login', Handlers.Home.LoginHandler),
             ('PerformLogin', r'/ajax/performLogin', Handlers.Ajax.PerformLogin.PerformLoginHandler),
-            ('Logout', r'/logout', Handlers.Logout.LogoutHandler),
+            ('Logout', r'/logout', Handlers.Home.LogoutHandler),
             ('Admin_Home', r'/admin/?', Handlers.Admin.Index.AdminIndex),
             ('Admin_Users', r'/admin/users', Handlers.Admin.Users.AdminUsers),
             ('Admin_Roles', r'/admin/roles', Handlers.Admin.Roles.AdminRoles),

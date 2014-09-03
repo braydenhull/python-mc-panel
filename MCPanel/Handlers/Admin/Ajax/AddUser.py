@@ -2,8 +2,8 @@ __author__ = 'brayden'
 
 from tornado.web import asynchronous
 from tornado.web import authenticated
-from Base import BaseAdminAjaxHandler
-from Handlers.Base import admin
+from . import BaseAdminAjaxHandler
+from Handlers import admin
 
 
 class AddUserHandler(BaseAdminAjaxHandler):

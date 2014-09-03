@@ -1,8 +1,7 @@
 __author__ = 'brayden'
 
 from tornado.web import asynchronous
-from Base import BaseAjaxHandler
-import base64
+from . import BaseAjaxHandler
 from peewee import DoesNotExist
 
 

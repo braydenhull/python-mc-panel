@@ -3,7 +3,7 @@ __author__ = 'brayden'
 from tornado.web import asynchronous
 from tornado.web import authenticated
 from tornado.web import addslash
-from Base import BaseUserHandler
+from . import BaseUserHandler
 
 
 class UserIndexHandler(BaseUserHandler):

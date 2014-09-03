@@ -1,10 +1,10 @@
 __author__ = 'brayden'
 
 from tornado.web import asynchronous
-from Base import BaseAdminHandler
+from . import BaseAdminHandler
 from tornado.web import authenticated
 from tornado.web import addslash
-from Handlers.Base import admin
+from Handlers import admin
 
 
 class AdminIndex(BaseAdminHandler):

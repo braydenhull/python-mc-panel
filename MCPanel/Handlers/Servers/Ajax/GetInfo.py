@@ -3,7 +3,7 @@ __author__ = 'brayden'
 from tornado.web import asynchronous
 from tornado.web import authenticated
 from tornado.web import MissingArgumentError
-from Base import BaseServersAjaxHandler
+from . import BaseServersAjaxHandler
 from Minecraft.provision import Bukkit
 from Minecraft.provision import Vanilla
 

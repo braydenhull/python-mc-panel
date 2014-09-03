@@ -2,7 +2,7 @@ __author__ = 'brayden'
 
 from tornado.web import asynchronous
 from tornado.web import authenticated
-from Base import BaseServerHandler
+from . import BaseServerHandler
 import tornado.ioloop
 from Minecraft.helpers import Vanilla, Bukkit, Base
 import os
