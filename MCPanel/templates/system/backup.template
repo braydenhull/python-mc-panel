@@ -39,15 +39,3 @@
         </form>
     </div>
 {% end %}
-
-{% block scripts %}
-    <script>
-    $(function(){
-        $("#add_local_submit").click(function(){
-            var destination_name = $("#add_local_friendlyname").val();
-            var folder = $("#add_local_folder").val();
-            var backup_limit = $("#add_local_backup_limit").val();
-        })
-    })
-    </script>
-{% end %}

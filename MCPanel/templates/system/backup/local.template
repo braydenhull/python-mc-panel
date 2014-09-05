@@ -106,7 +106,7 @@
 {% import psutil as psutil %}
 {% set usage = psutil.disk_usage(destination.Folder) %}
 
-<script src="../../../static/js/highcharts.js"></script>
+<script src="/static/js/highcharts.js"></script>
 <script>
     $(function(){
 
