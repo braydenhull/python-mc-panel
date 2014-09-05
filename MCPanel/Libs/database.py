@@ -120,7 +120,7 @@ class Database():
             self.Users.select().execute()
         except:
             self.initialiseDatabase()
-            # self.add_user('Admin', 'admin', True)
+            # self.add_user('Admin', 'admin', True) # TODO: gotta fix this as the whole modular thing makes this not work.. maybe move the code to application class instead?
             # print "Database initialised. Login is: \r\nUsername: Admin\r\nPassword: admin"
 
     def initialiseDatabase(self):  # if param is true it'll suppress errors

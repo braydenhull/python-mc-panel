@@ -8,6 +8,9 @@ import functools
 
 
 class BaseHandler(tornado.web.RequestHandler):
+    def initialize(self, **kwargs):
+        self.page_title = kwargs['title']
+
     def get_current_user(self):
         if 'session' in self.request.cookies:
             cookie = tornado.escape.url_unescape(self.get_cookie('session'))
@@ -28,6 +31,7 @@ class BaseHandler(tornado.web.RequestHandler):
             'name': self.application.name,
             'process_prefix': self.application.process_prefix,
             'servers': self.application.db.get_servers(),
+            'page_title': self.page_title,
         })
         return ns
 

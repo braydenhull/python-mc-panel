@@ -1,17 +1,9 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ title }} - Server {{ server_id }} - Players</title>
-    <link href="../../../static/css/bootstrap.min.css" rel="stylesheet" media="screen">
-    <link href="../../../static/css/style.css" rel="stylesheet" media="screen">
-    <link href="../../../static/css/font-awesome.min.css" rel="stylesheet" media="screen">
-    <link href="../../../static/css/jquery.pnotify.default.css" rel="stylesheet" media="screen">
-    <meta charset="UTF-8">
-</head>
-<body>
-{% include "includes/navbar.template" %}
-<div class="container" style="padding-top: 25px;">
-    {% include "includes/server-pills.template" %}
+{% extends "layouts/master.template" %}
+
+{% block title %}{{ title }} - Server {{ server_id }} - Players{% end %}
+
+{% block content %}
+{% include "includes/server-pills.template" %}
     <div class="col-md-10">
 
         <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
@@ -88,195 +80,192 @@
             </div>
         </div>
     </div>
-</div>
-<script src="../../../static/js/jquery.min.js"></script>
-<script src="../../../static/js/bootstrap.min.js"></script>
-<script src="../../../static/js/jquery.pnotify.js"></script>
-<script>
-    $(function(){
+{% end %}
+{% block scripts %}
 
-        $("#tabs").tab();
+    <script>
+        $(function(){
 
-        var statusTable = $("#statusTable");
-        var bannedPlayersTable = $("#bannedPlayersTable");
-        var operatorsTable = $("#operatorsTable");
+            $("#tabs").tab();
 
-        $("#server-id{{ server_id }}").addClass("active");
-        function refreshPlayers(){
-            $.post('{{ reverse_url("Server_Ajax_GetPlayers", server_id) }}').done(function(data){
-                $("#statusText").text("There are currently " + data['result']['current_players'] + " online of " + data['result']['max_players']);
-                $("#statusTable").empty();
-                $(data['result']['players']).each(function(index, name){
-                    $("#statusTable").append("<tr>" +
-                            "<td>" + name + "</td>" +
-                            "<td>" +
-                            "<div class=\"btn-group\">" +
-                                "<button username=\"" + name + "\" class=\"btn btn-warning btn-xs kick-player\" type=\"button\">Kick</button>" +
-                                "<button username=\"" + name + "\" class=\"btn btn-danger btn-xs ban-player\" type=\"button\">Ban</button>" +
-                            "</div>" +
-                            "</td></tr>"
-                    )
+            var statusTable = $("#statusTable");
+            var bannedPlayersTable = $("#bannedPlayersTable");
+            var operatorsTable = $("#operatorsTable");
+
+            $("#server-id{{ server_id }}").addClass("active");
+            function refreshPlayers(){
+                $.post('{{ reverse_url("Server_Ajax_GetPlayers", server_id) }}').done(function(data){
+                    $("#statusText").text("There are currently " + data['result']['current_players'] + " online of " + data['result']['max_players']);
+                    $("#statusTable").empty();
+                    $(data['result']['players']).each(function(index, name){
+                        $("#statusTable").append("<tr>" +
+                                "<td>" + name + "</td>" +
+                                "<td>" +
+                                "<div class=\"btn-group\">" +
+                                    "<button username=\"" + name + "\" class=\"btn btn-warning btn-xs kick-player\" type=\"button\">Kick</button>" +
+                                    "<button username=\"" + name + "\" class=\"btn btn-danger btn-xs ban-player\" type=\"button\">Ban</button>" +
+                                "</div>" +
+                                "</td></tr>"
+                        )
+                    })
                 })
-            })
-        }
-
-        function refreshBannedPlayers(){
-            $.post('{{ reverse_url("Server_Ajax_GetBannedPlayers", server_id) }}').done(function(data){
-                bannedPlayersTable.empty();
-                $(data['result']['results']['players']).each(function(index, name){
-                    bannedPlayersTable.append('<tr>' +
-                            '<td>' + name + '</td>' +
-                            '<td>' + data['result']['results']['details'][name]['Ban Date'] + '</td>' +
-                            '<td>' + data['result']['results']['details'][name]['Banned By'] + '</td>' +
-                            '<td>' + data['result']['results']['details'][name]['Banned Until'] + '</td>' +
-                            '<td>' + data['result']['results']['details'][name]['Reason'] + '</td>' +
-                            '<td><button username="' + name + '" class="btn btn-success btn-xs unban-player" type="button">Unban</button></td>' +
-                            '</tr>')
-                })
-            })
-        }
-
-        function refreshOperators(){
-            $.post('{{ reverse_url("Server_Ajax_GetOperators", server_id) }}').done(function(data){
-                operatorsTable.empty();
-                $(data['result']['ops']).each(function(index, name){
-                    operatorsTable.append('<tr>' +
-                            '<td>' + name + '</td>' +
-                            '<td><button class="btn btn-xs btn-danger deop-player" type="button" username="' + name + '">De-op</button></td>' +
-                            '</tr>')
-                })
-            })
-        }
-
-        statusTable.on('click', '.kick-player', function(){
-            var player = $(this).attr('username');
-            $.post('{{ reverse_url('Server_Ajax_KickPlayer', server_id) }}', {"player": player}).done(function(data){
-                $.pnotify({
-                    title: 'Kicked Player',
-                    text: 'Successfully kicked ' + player,
-                    type: 'success',
-                    history: false
-                })
-            }).fail(function(data){
-                $.pnotify({
-                    title: 'Error',
-                    text: 'Failed to kick ' + player + '\r\nMessage: ' + data['responseJSON']['result']['message'],
-                    type: 'error',
-                    history: false
-                })
-            })
-        });
-
-        statusTable.on('click', '.ban-player', function(){
-            var player = $(this).attr('username');
-            $.post('{{ reverse_url('Server_Ajax_BanPlayer', server_id) }}', {"player": player}).done(function(data){
-                $.pnotify({
-                    title: 'Banned Player',
-                    text: 'Successfully banned ' + player,
-                    type: 'success',
-                    history: false
-                })
-            }).fail(function(data){
-                $.pnotify({
-                    title: 'Error',
-                    text: 'Failed to ban ' + player + '\r\nMessage: ' + data['responseJSON']['result']['message'],
-                    type: 'error',
-                    history: false
-                })
-            })
-        });
-
-        bannedPlayersTable.on('click', '.unban-player', function(){
-            $.post('{{ reverse_url('Server_Ajax_UnbanPlayer', server_id) }}', {"player": $(this).attr('username')}).done(function(data){
-                $.pnotify({
-                    title: 'Unbanned Player',
-                    text: 'Successfully unbanned ' + $(this).attr('username'),
-                    type: 'success',
-                    history: false
-                });
-                setTimeout(refreshBannedPlayers, 50)
-            }).fail(function(data){
-                $.pnotify({
-                    title: 'Error',
-                    text: 'Failed to unban ' + $(this).attr('username') + '\r\nMessage: ' + data['responseJSON']['result']['message'],
-                    type: 'error',
-                    history: false
-                })
-            })
-        });
-
-        operatorsTable.on('click', '.deop-player', function(){
-            $.post('{{ reverse_url('Server_Ajax_DeopPlayer', server_id) }}', {"player": $(this).attr('username')}).done(function(data){
-                $.pnotify({
-                    title: 'Deop\'d Player',
-                    text: 'Successfully deop\'d ' + $(this).attr('username'),
-                    type: 'success',
-                    history: false
-                });
-                setTimeout(refreshOperators, 50)
-            }).fail(function(data){
-                $.pnotify({
-                    title: 'Error',
-                    text: 'Failed to deop ' + $(this).attr('username') + '\r\nMessage: ' + data['responseJSON']['result']['message'],
-                    type: 'error',
-                    history: false
-                })
-            })
-        });
-
-        function autoRefreshPlayers(){
-            if($("#autoRefreshStatus").prop("checked")){
-                refreshPlayers();
             }
-        }
 
-        $("#refreshStatus").click(function(){
-            refreshPlayers()
-        });
+            function refreshBannedPlayers(){
+                $.post('{{ reverse_url("Server_Ajax_GetBannedPlayers", server_id) }}').done(function(data){
+                    bannedPlayersTable.empty();
+                    $(data['result']['results']['players']).each(function(index, name){
+                        bannedPlayersTable.append('<tr>' +
+                                '<td>' + name + '</td>' +
+                                '<td>' + data['result']['results']['details'][name]['Ban Date'] + '</td>' +
+                                '<td>' + data['result']['results']['details'][name]['Banned By'] + '</td>' +
+                                '<td>' + data['result']['results']['details'][name]['Banned Until'] + '</td>' +
+                                '<td>' + data['result']['results']['details'][name]['Reason'] + '</td>' +
+                                '<td><button username="' + name + '" class="btn btn-success btn-xs unban-player" type="button">Unban</button></td>' +
+                                '</tr>')
+                    })
+                })
+            }
 
-        $("#refreshBanned").click(function(){
-            refreshBannedPlayers();
-        });
+            function refreshOperators(){
+                $.post('{{ reverse_url("Server_Ajax_GetOperators", server_id) }}').done(function(data){
+                    operatorsTable.empty();
+                    $(data['result']['ops']).each(function(index, name){
+                        operatorsTable.append('<tr>' +
+                                '<td>' + name + '</td>' +
+                                '<td><button class="btn btn-xs btn-danger deop-player" type="button" username="' + name + '">De-op</button></td>' +
+                                '</tr>')
+                    })
+                })
+            }
 
-        $("#refreshOperators").click(function(){
+            statusTable.on('click', '.kick-player', function(){
+                var player = $(this).attr('username');
+                $.post('{{ reverse_url('Server_Ajax_KickPlayer', server_id) }}', {"player": player}).done(function(data){
+                    $.pnotify({
+                        title: 'Kicked Player',
+                        text: 'Successfully kicked ' + player,
+                        type: 'success',
+                        history: false
+                    })
+                }).fail(function(data){
+                    $.pnotify({
+                        title: 'Error',
+                        text: 'Failed to kick ' + player + '\r\nMessage: ' + data['responseJSON']['result']['message'],
+                        type: 'error',
+                        history: false
+                    })
+                })
+            });
+
+            statusTable.on('click', '.ban-player', function(){
+                var player = $(this).attr('username');
+                $.post('{{ reverse_url('Server_Ajax_BanPlayer', server_id) }}', {"player": player}).done(function(data){
+                    $.pnotify({
+                        title: 'Banned Player',
+                        text: 'Successfully banned ' + player,
+                        type: 'success',
+                        history: false
+                    })
+                }).fail(function(data){
+                    $.pnotify({
+                        title: 'Error',
+                        text: 'Failed to ban ' + player + '\r\nMessage: ' + data['responseJSON']['result']['message'],
+                        type: 'error',
+                        history: false
+                    })
+                })
+            });
+
+            bannedPlayersTable.on('click', '.unban-player', function(){
+                $.post('{{ reverse_url('Server_Ajax_UnbanPlayer', server_id) }}', {"player": $(this).attr('username')}).done(function(data){
+                    $.pnotify({
+                        title: 'Unbanned Player',
+                        text: 'Successfully unbanned ' + $(this).attr('username'),
+                        type: 'success',
+                        history: false
+                    });
+                    setTimeout(refreshBannedPlayers, 50)
+                }).fail(function(data){
+                    $.pnotify({
+                        title: 'Error',
+                        text: 'Failed to unban ' + $(this).attr('username') + '\r\nMessage: ' + data['responseJSON']['result']['message'],
+                        type: 'error',
+                        history: false
+                    })
+                })
+            });
+
+            operatorsTable.on('click', '.deop-player', function(){
+                $.post('{{ reverse_url('Server_Ajax_DeopPlayer', server_id) }}', {"player": $(this).attr('username')}).done(function(data){
+                    $.pnotify({
+                        title: 'Deop\'d Player',
+                        text: 'Successfully deop\'d ' + $(this).attr('username'),
+                        type: 'success',
+                        history: false
+                    });
+                    setTimeout(refreshOperators, 50)
+                }).fail(function(data){
+                    $.pnotify({
+                        title: 'Error',
+                        text: 'Failed to deop ' + $(this).attr('username') + '\r\nMessage: ' + data['responseJSON']['result']['message'],
+                        type: 'error',
+                        history: false
+                    })
+                })
+            });
+
+            function autoRefreshPlayers(){
+                if($("#autoRefreshStatus").prop("checked")){
+                    refreshPlayers();
+                }
+            }
+
+            $("#refreshStatus").click(function(){
+                refreshPlayers()
+            });
+
+            $("#refreshBanned").click(function(){
+                refreshBannedPlayers();
+            });
+
+            $("#refreshOperators").click(function(){
+                refreshOperators();
+            });
+
+            $("#banPlayer").click(function(){
+                var player = $("#playerName").val();
+                $.post('{{ reverse_url("Server_Ajax_BanPlayer", server_id) }}', {"player": player}).done(function(data){
+                    $.pnotify({
+                        title: 'Banned player',
+                        text: 'Successfully banned ' + player,
+                        type: 'success',
+                        history: false
+                    });
+                    setTimeout(refreshBannedPlayers, 50);
+                    $("#playerName").val("")
+                })
+            });
+
+            $("#opPlayer").click(function(){
+                var player = $("#opPlayerName").val();
+                $.post('{{ reverse_url('Server_Ajax_OpPlayer', server_id) }}', {"player": player}).done(function(data){
+                    $.pnotify({
+                        title: 'Op\'ed Player',
+                        text: 'Successfully gave ' + player + ' operator privileges.',
+                        type: 'success',
+                        history: false
+                    });
+                    setTimeout(refreshOperators, 50);
+                    $("#opPlayerName").val("")
+                })
+            });
+
+            setInterval(autoRefreshPlayers, 5000); // Minecraft caches for 5 seconds so may as well set that as timeout
+
+            refreshPlayers();
             refreshOperators();
-        });
-
-        $("#banPlayer").click(function(){
-            var player = $("#playerName").val();
-            $.post('{{ reverse_url("Server_Ajax_BanPlayer", server_id) }}', {"player": player}).done(function(data){
-                $.pnotify({
-                    title: 'Banned player',
-                    text: 'Successfully banned ' + player,
-                    type: 'success',
-                    history: false
-                });
-                setTimeout(refreshBannedPlayers, 50);
-                $("#playerName").val("")
-            })
-        });
-
-        $("#opPlayer").click(function(){
-            var player = $("#opPlayerName").val();
-            $.post('{{ reverse_url('Server_Ajax_OpPlayer', server_id) }}', {"player": player}).done(function(data){
-                $.pnotify({
-                    title: 'Op\'ed Player',
-                    text: 'Successfully gave ' + player + ' operator privileges.',
-                    type: 'success',
-                    history: false
-                });
-                setTimeout(refreshOperators, 50);
-                $("#opPlayerName").val("")
-            })
-        });
-
-        setInterval(autoRefreshPlayers, 5000); // Minecraft caches for 5 seconds so may as well set that as timeout
-
-        refreshPlayers();
-        refreshOperators();
-        refreshBannedPlayers()
-    })
-</script>
-{% include "includes/footer.template" %}
-</body>
-</html>
+            refreshBannedPlayers()
+        })
+    </script>
+{% end %}
