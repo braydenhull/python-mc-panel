@@ -232,38 +232,38 @@ class Bukkit:
                 pass
             os.remove(os.path.dirname(application.supervisor_config_path) + '/conf.d/%s%s.conf' % (application.process_prefix, server_id))
         except OSError as e:
-            print "Failed to remove supervisord config for server %s. Error %s" % (server_id, e)
+            application.log.warning("Failed to remove supervisord config for server %s. Error %s" % (server_id, e))
 
         try:
             application.supervisor.server.supervisor.clearProcessLogs(application.process_prefix + server_id)
         except Exception as e:
-            print "Failed to remove process logs for server %s. Error: %s" % (server_id, e)
+            application.log.warning("Failed to remove process logs for server %s. Error: %s" % (server_id, e))
 
         try:
             with open('/var/log/minecraft/%s%s.log' % (application.process_prefix, server_id), 'w') as f:
                 f.write('')  # clear log
         except IOError as e:
-            print "Failed to blank out log for server %s. Error %s" % (server_id, e)
+            application.log.warning("Failed to blank out log for server %s. Error %s" % (server_id, e))
 
         try:
             application.supervisor.server.supervisor.removeProcessGroup(application.process_prefix + server_id)
         except Exception as e:
-            print "Failed to remove process group from supervisord for sever %s. Error: %s." % (server_id, e)
+            application.log.warning("Failed to remove process group from supervisord for sever %s. Error: %s." % (server_id, e))
 
         try:
             application.supervisor.server.supervisor.reloadConfig()
         except Exception as e:
-            print "Failed to reload config for supervisord from server %s. Error: %s" % (server_id, e)
+            application.log.warning("Failed to reload config for supervisord from server %s. Error: %s" % (server_id, e))
 
         try:
             shutil.rmtree(application.config.get('minecraft', 'home') + '/%s%s/' % (application.process_prefix, server_id))
         except OSError as e:
-            print "Failed to remove home directory for server %s. Error: %s" % (server_id, e)
+            application.log.warning("Failed to remove home directory for server %s. Error: %s" % (server_id, e))
 
         try:
             subprocess.Popen(['userdel', '%s%s' % (application.process_prefix, server_id)], shell=False)
         except OSError as e:
-            print "Failed to remove Linux user for server %s. Error: %s" % (server_id, e)
+            application.log.warning("Failed to remove Linux user for server %s. Error: %s" % (server_id, e))
 
         return True
 

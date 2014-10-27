@@ -8,7 +8,7 @@ import os
 import subprocess
 import tornado.ioloop
 
-class GetLogHandler(BaseServerWebSocketHandler):
+class GetLog(BaseServerWebSocketHandler):
     def open(self, server_id):
         self.server_id = server_id
         self.auth = False
@@ -20,7 +20,7 @@ class GetLogHandler(BaseServerWebSocketHandler):
             if message['action'] == "auth":
                 session = tornado.escape.url_unescape(message['authentication'])
                 if len(session.split('|')) == 2:
-                    username = (((session.split('|')[0])).decode('hex').decode('utf-8')).strip()
+                    username = ((session.split('|')[0]).decode('hex').decode('utf-8')).strip()
                     hash = session.split('|')[1]
                     try:
                         if self.application.authentication.check_session(username, hash):

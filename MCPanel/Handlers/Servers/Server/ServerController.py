@@ -1,15 +1,67 @@
 __author__ = 'brayden'
 
-from tornado.web import asynchronous
+from tornado.web import asynchronous, os
 from tornado.web import authenticated
 from . import BaseServerHandler
+from Minecraft.backup import Local
+from Minecraft.status import ShortStatus
+import netifaces
 import tornado.ioloop
 from Minecraft.helpers import Vanilla, Bukkit, Base
-import os
-import netifaces
 
 
-class ServerSettingsHandler(BaseServerHandler):
+class Backup(BaseServerHandler):
+    @asynchronous
+    @authenticated
+    def get(self, server_id):
+        self.render(self.application.settings['template_path'] + '/servers/server/backup.template', server_id=server_id, destinations=self.application.db.get_backup_destinations(), local_backup=Local)
+
+
+class Console(BaseServerHandler):
+    @asynchronous
+    @authenticated
+    def get(self, server_id):
+        self.render(self.application.settings['template_path'] + '/servers/server/console.template', server_id=server_id)
+
+
+class Index(BaseServerHandler):
+    @asynchronous
+    @authenticated
+    def get(self, server_id):
+        self.render(self.application.settings['template_path'] + '/servers/server/index.template', server_id=server_id)
+
+
+class Players(BaseServerHandler):
+    @asynchronous
+    @authenticated
+    def get(self, server_id):
+        self.render(self.application.settings['template_path'] + '/servers/server/players.template', server_id=server_id, shortstatus=ShortStatus)
+
+
+class Plugin(BaseServerHandler):
+    @asynchronous
+    @authenticated
+    def get(self, server_id):
+        self.render(self.application.settings['template_path'] + '/servers/server/plugins.template', server_id=server_id)
+
+
+class Properties(BaseServerHandler):
+    @asynchronous
+    @authenticated
+    def get(self, server_id):
+        with open(self.application.config.get("minecraft", "home") + '/%s%s/server.properties' % (self.application.process_prefix, server_id)) as f:
+            properties = f.read()
+        self.render(self.application.settings['template_path'] + '/servers/server/properties.template', server_id=server_id, properties=properties)
+
+    @asynchronous
+    @authenticated
+    def post(self, server_id):
+        with open(self.application.config.get("minecraft", "home") + '/%s%s/server.properties' % (self.application.process_prefix, server_id), 'w') as f:
+            f.write(self.get_argument('properties'))
+        self.render(self.application.settings['template_path'] + '/servers/server/properties.template', server_id=server_id, properties=self.get_argument('properties'))
+
+
+class Settings(BaseServerHandler):
     @asynchronous
     @authenticated
     def get(self, server_id):
@@ -17,6 +69,8 @@ class ServerSettingsHandler(BaseServerHandler):
         for interface in netifaces.interfaces(): interfaces.append(netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['addr'])
         self.render(self.application.settings['template_path'] + '/servers/server/settings.template', server_id=server_id, message='', error=False, interfaces=interfaces)
 
+    @asynchronous
+    @authenticated
     def post(self, server_id):
         self.server_id = server_id
         interfaces = []
@@ -65,3 +119,10 @@ class ServerSettingsHandler(BaseServerHandler):
         if not self.application.supervisor.is_process_running(self.application.process_prefix + self.server_id):
             self.application.supervisor.refresh(self.application.process_prefix + self.server_id)
             self.callback.stop()
+
+
+class Update(BaseServerHandler):
+    @asynchronous
+    @authenticated
+    def get(self, server_id):
+        self.render(self.application.settings['template_path'] + '/servers/server/update.template', server_id=server_id)

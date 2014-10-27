@@ -4,4 +4,5 @@ from tornado.websocket import WebSocketHandler
 
 
 class BaseWebSocketHandler(WebSocketHandler):
-    pass
+    def initialize(self, **kwargs):
+        self.page_title = kwargs['title']

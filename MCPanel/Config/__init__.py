@@ -2,6 +2,7 @@ __author__ = 'brayden'
 
 import os
 import ConfigParser
+import Libs.log
 
 
 class config:
@@ -65,5 +66,5 @@ configuration = /etc/supervisor/supervisord.conf
         try:
             return self.config.get(section, option)
         except ConfigParser.NoSectionError or ConfigParser.NoOptionError as e:
-            print "%s in %s is not present. Reverting to default." % (option, section)
+            Libs.log.Log().warning("%s in %s is not present. Reverting to default." % (option, section))
             return self.defaults[section][option]

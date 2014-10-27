@@ -20,6 +20,7 @@
 <script src="/static/js/jquery.min.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
 <script src="/static/js/jquery.pnotify.js"></script>
+<script src="/static/js/jquery-ui.min.js"></script>
 {% block scripts %}{% end %}
 {% include "../includes/footer.template" %}
 </body>
